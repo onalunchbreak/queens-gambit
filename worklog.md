@@ -92,3 +92,23 @@ Work Log:
 
 Stage Summary:
 - Resign + confetti (both AI-win and player-win palettes) + Prisma/SQLite persistence + floating animated leaderboard all verified working end-to-end.
+
+---
+Task ID: 5
+Agent: main
+Task: Fix moves overflow, redesign difficulty selector, implement robust dark mode.
+
+Work Log:
+- MoveHistory: fixed overflow — changed to fixed h-40 ScrollArea with minmax(0,1fr) grid columns + truncate on move cells + title tooltips. Verified 18-ply game scrolls internally (scrollH 214 > clientH 158) without pushing into other UI.
+- DifficultySelector: complete redesign — removed garish green/yellow/pink borders + colored rank badges. New design: monochrome cards with subtle border-border + bg-card/80, rank indicated by 3 vertical pips (filled count = level, bg-primary filled / bg-muted-foreground/25 empty), active card marked by border-primary + ring-1 ring-primary/40. Elegant and theme-consistent.
+- Dark mode system:
+  - globals.css: added chess-specific CSS variables (--parchment, --mahogany, --walnut, --walnut-deep, --maple, --maple-deep, --piece-ivory, --piece-ebony, --piece-ivory-stroke, --piece-ebony-stroke, --frame-grad-*, --heat-warm, --heat-cool, --last-move, --check, --legal-dot, --legal-ring) with light + dark values. Rewrote shadcn core tokens to warm amber-tinted neutrals (light) and deep charcoal-brown (dark). Added @theme inline mapping for bg-parchment etc.
+  - ThemeProvider (next-themes, attribute="class", defaultTheme="system") + no-flash inline script in <head>.
+  - ThemeToggle component (animated sun/moon icon swap via framer-motion AnimatePresence) added to entry screen + game header.
+  - Updated ALL chess components to use CSS variables: ChessBoard (squares, frame, heatmap, highlights, coords, legal dots), ChessPiece (ivory/ebony fill+stroke), EvalBar, ThinkingIndicator, EntryScreen, GameScreen (header/cards/badges/dialogs/footer), Leaderboard (floating button + panel + rows), GameReview (badges with dark-aware /15 opacity backgrounds).
+  - Dark mode: deeper moodier wood (walnut #5a3d24, maple #b89968), luminous pieces (ivory #f2e6c8, ebony #0a0805), charcoal-brown parchment (#1a1612), warm amber primary.
+- VLM-verified: dark mode entry + game screen look polished; light mode difficulty selector is elegant/muted with no garish colors; moves list scrolls within fixed-height container.
+- Lint clean, no console/runtime errors.
+
+Stage Summary:
+- Moves overflow fixed (scrollable container). Difficulty selector redesigned (elegant pips, no garish colors). Robust dark mode implemented across the entire app with smooth transitions and theme-aware CSS variables.

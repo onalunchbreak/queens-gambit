@@ -25,6 +25,7 @@ import { ThinkingIndicator } from "./ThinkingIndicator";
 import { GameReview } from "./GameReview";
 import { Confetti } from "./Confetti";
 import { Leaderboard } from "./Leaderboard";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { useChessGame, START_FEN } from "./useChessGame";
 import { reviewPosition } from "./review-util";
 import { soundManager } from "./sounds";
@@ -113,27 +114,28 @@ export function GameScreen({ playerName, initialDifficulty, onExit }: GameScreen
       onClick={resumeAudio}
     >
       {/* Header */}
-      <header className="border-b border-amber-900/15 bg-[#fbf6e9]/80 backdrop-blur">
+      <header className="border-b border-border bg-card/80 backdrop-blur">
         <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-3 px-4 py-3">
           <div className="flex items-center gap-3 min-w-0">
             <span
-              className="hidden sm:flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-amber-700/40 bg-gradient-to-br from-[#fbf6e9] to-[#e8d9b8]"
-              style={{ fontFamily: FONT_STACK, fontSize: 20, color: "#3a2a18", lineHeight: 1 }}
+              className="hidden sm:flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-primary/40 bg-gradient-to-br from-card to-muted"
+              style={{ fontFamily: FONT_STACK, fontSize: 20, color: "var(--piece-ivory-stroke)", lineHeight: 1 }}
             >
               {"\u265E"}
             </span>
             <div className="min-w-0">
-              <h1 className="font-serif text-lg sm:text-xl font-semibold text-stone-800 truncate">
+              <h1 className="font-serif text-lg sm:text-xl font-semibold text-foreground truncate">
                 Harmon&apos;s Gambit
               </h1>
-              <p className="text-[11px] sm:text-xs text-stone-500 truncate">
-                <span className="font-medium text-stone-700">{playerName}</span>
-                <span className="mx-1.5 text-amber-700/70">vs.</span>
-                <span className="font-medium text-stone-700">Harmon AI</span>
+              <p className="text-[11px] sm:text-xs text-muted-foreground truncate">
+                <span className="font-medium text-foreground">{playerName}</span>
+                <span className="mx-1.5 text-primary/70">vs.</span>
+                <span className="font-medium text-foreground">Harmon AI</span>
               </p>
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <ThemeToggle />
             <Button
               variant="ghost"
               size="sm"
@@ -220,7 +222,7 @@ export function GameScreen({ playerName, initialDifficulty, onExit }: GameScreen
         {/* Side panel */}
         <aside className="w-full lg:w-[340px] shrink-0 space-y-3">
           {/* Eval + heatmap row */}
-          <div className="rounded-xl border border-amber-900/15 bg-[#fbf6e9]/80 p-3 shadow-sm">
+          <div className="rounded-xl border border-border bg-card/80 p-3 shadow-sm">
             <div className="flex items-center gap-3">
               <EvalBar
                 prob={state.evalProb}
@@ -234,7 +236,7 @@ export function GameScreen({ playerName, initialDifficulty, onExit }: GameScreen
                     Influence
                   </span>
                   <div className="flex items-center gap-1.5">
-                    <LayoutGrid className="h-3.5 w-3.5 text-amber-700/70" />
+                    <LayoutGrid className="h-3.5 w-3.5 text-primary/70" />
                     <Switch
                       checked={state.showHeatmap}
                       onCheckedChange={game.setShowHeatmap}
@@ -252,7 +254,7 @@ export function GameScreen({ playerName, initialDifficulty, onExit }: GameScreen
           </div>
 
           {/* Thinking or explanation */}
-          <div className="rounded-xl border border-amber-900/15 bg-[#fbf6e9]/80 p-3 shadow-sm">
+          <div className="rounded-xl border border-border bg-card/80 p-3 shadow-sm">
             <AnimatePresence mode="wait">
               {state.isAiThinking ? (
                 <motion.div
@@ -272,26 +274,26 @@ export function GameScreen({ playerName, initialDifficulty, onExit }: GameScreen
                   className="space-y-1.5"
                 >
                   <div className="flex items-center gap-1.5">
-                    <Brain className="h-3.5 w-3.5 text-amber-700" />
-                    <span className="text-[11px] font-semibold uppercase tracking-wider text-stone-600">
+                    <Brain className="h-3.5 w-3.5 text-primary" />
+                    <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                       Harmon&apos;s last move
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Badge className="bg-stone-800 text-amber-50 font-mono">
+                    <Badge className="bg-primary text-primary-foreground font-mono">
                       {state.history.length > 0 ? state.history[state.history.length - 1] : ""}
                     </Badge>
-                    <span className="text-sm font-semibold text-stone-800">
+                    <span className="text-sm font-semibold text-foreground">
                       {state.explanation.short}
                     </span>
                   </div>
-                  <p className="text-xs leading-relaxed text-stone-600">
+                  <p className="text-xs leading-relaxed text-muted-foreground">
                     {state.narrationLoading
                       ? state.explanation.detail
                       : state.narration || state.explanation.detail}
                   </p>
                   {state.narration && !state.narrationLoading && (
-                    <p className="flex items-start gap-1 text-[11px] italic text-stone-400">
+                    <p className="flex items-start gap-1 text-[11px] italic text-muted-foreground/70">
                       <MessageSquareQuote className="h-3 w-3 mt-0.5 shrink-0" />
                       {state.narration}
                     </p>
@@ -305,7 +307,7 @@ export function GameScreen({ playerName, initialDifficulty, onExit }: GameScreen
                   exit={{ opacity: 0 }}
                   className="py-3 text-center text-xs text-muted-foreground"
                 >
-                  <Crown className="mx-auto mb-1 h-4 w-4 text-amber-700/60" />
+                  <Crown className="mx-auto mb-1 h-4 w-4 text-primary/60" />
                   White to move. Make your opening.
                 </motion.div>
               )}
@@ -313,7 +315,7 @@ export function GameScreen({ playerName, initialDifficulty, onExit }: GameScreen
           </div>
 
           {/* Move history */}
-          <div className="rounded-xl border border-amber-900/15 bg-[#fbf6e9]/80 p-3 shadow-sm">
+          <div className="rounded-xl border border-border bg-card/80 p-3 shadow-sm">
             <MoveHistory
               sans={state.history}
               reviewActive={reviewActive}
@@ -323,9 +325,9 @@ export function GameScreen({ playerName, initialDifficulty, onExit }: GameScreen
           </div>
 
           {/* Difficulty */}
-          <div className="rounded-xl border border-amber-900/15 bg-[#fbf6e9]/80 p-3 shadow-sm">
+          <div className="rounded-xl border border-border bg-card/80 p-3 shadow-sm">
             <div className="mb-2 flex items-center justify-between">
-              <span className="text-[11px] font-semibold uppercase tracking-wider text-stone-600">
+              <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                 Opponent level
               </span>
               {state.isAiThinking && (
@@ -370,10 +372,10 @@ export function GameScreen({ playerName, initialDifficulty, onExit }: GameScreen
                 exit={{ opacity: 0 }}
                 className={
                   state.winner === "player"
-                    ? "rounded-xl border border-emerald-500/40 bg-gradient-to-br from-emerald-50 to-[#e8d9b8] p-4 text-center shadow-md"
+                    ? "rounded-xl border border-emerald-500/40 bg-gradient-to-br from-emerald-500/10 to-card p-4 text-center shadow-md"
                     : state.winner === "ai"
-                      ? "rounded-xl border border-rose-400/40 bg-gradient-to-br from-rose-50 to-[#e8d9b8] p-4 text-center shadow-md"
-                      : "rounded-xl border border-amber-700/30 bg-gradient-to-br from-[#fbf6e9] to-[#e8d9b8] p-4 text-center shadow-md"
+                      ? "rounded-xl border border-rose-400/40 bg-gradient-to-br from-rose-500/10 to-card p-4 text-center shadow-md"
+                      : "rounded-xl border border-primary/30 bg-gradient-to-br from-card to-muted p-4 text-center shadow-md"
                 }
               >
                 <Crown
@@ -383,11 +385,11 @@ export function GameScreen({ playerName, initialDifficulty, onExit }: GameScreen
                       ? "text-emerald-600"
                       : state.winner === "ai"
                         ? "text-rose-600"
-                        : "text-amber-700")
+                        : "text-primary")
                   }
                 />
-                <p className="text-sm font-semibold text-stone-800">{state.gameResult}</p>
-                <p className="mt-1 text-xs text-stone-500">
+                <p className="text-sm font-semibold text-foreground">{state.gameResult}</p>
+                <p className="mt-1 text-xs text-muted-foreground">
                   {state.saved
                     ? "Saved to the leaderboard. Press Review Game for analysis."
                     : "Press Review Game for a full analysis."}
@@ -399,8 +401,8 @@ export function GameScreen({ playerName, initialDifficulty, onExit }: GameScreen
       </main>
 
       {/* Footer */}
-      <footer className="mt-auto border-t border-amber-900/15 bg-[#fbf6e9]/70">
-        <div className="mx-auto w-full max-w-6xl px-4 py-3 text-center text-[11px] text-stone-500">
+      <footer className="mt-auto border-t border-border bg-card/70">
+        <div className="mx-auto w-full max-w-6xl px-4 py-3 text-center text-[11px] text-muted-foreground">
           Harmon&apos;s Gambit &mdash; a study in calculation. AlphaZero meets the World Chess Championship.
         </div>
       </footer>
@@ -417,9 +419,9 @@ export function GameScreen({ playerName, initialDifficulty, onExit }: GameScreen
             <motion.div
               initial={{ scale: 0.9, y: 10 }}
               animate={{ scale: 1, y: 0 }}
-              className="rounded-2xl border border-amber-900/20 bg-[#fbf6e9] p-5 shadow-2xl"
+              className="rounded-2xl border border-border bg-card p-5 shadow-2xl"
             >
-              <p className="mb-3 text-center text-sm font-semibold text-stone-700">
+              <p className="mb-3 text-center text-sm font-semibold text-foreground">
                 Promote pawn to:
               </p>
               <div className="flex gap-2">
@@ -428,8 +430,8 @@ export function GameScreen({ playerName, initialDifficulty, onExit }: GameScreen
                     key={p.kind}
                     type="button"
                     onClick={() => game.choosePromotion(p.kind)}
-                    className="flex h-14 w-14 items-center justify-center rounded-lg border-2 border-amber-700/30 bg-white/70 transition hover:border-amber-600 hover:bg-amber-50"
-                    style={{ fontFamily: FONT_STACK, fontSize: 34, color: "#1b140d", lineHeight: 1 }}
+                    className="flex h-14 w-14 items-center justify-center rounded-lg border-2 border-primary/30 bg-background/70 transition hover:border-primary hover:bg-accent"
+                    style={{ fontFamily: FONT_STACK, fontSize: 34, color: "var(--piece-ebony)", lineHeight: 1 }}
                   >
                     {p.glyph}
                   </button>
@@ -455,13 +457,13 @@ export function GameScreen({ playerName, initialDifficulty, onExit }: GameScreen
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.9, y: 10 }}
               onClick={(e) => e.stopPropagation()}
-              className="w-[min(90vw,360px)] rounded-2xl border border-rose-300/50 bg-[#fbf6e9] p-5 shadow-2xl"
+              className="w-[min(90vw,360px)] rounded-2xl border border-rose-400/40 bg-card p-5 shadow-2xl"
             >
               <div className="mb-2 flex items-center gap-2">
                 <Flag className="h-5 w-5 text-rose-600" />
-                <span className="text-base font-semibold text-stone-800">Resign the game?</span>
+                <span className="text-base font-semibold text-foreground">Resign the game?</span>
               </div>
-              <p className="mb-4 text-sm text-stone-600">
+              <p className="mb-4 text-sm text-muted-foreground">
                 You will concede the match to Harmon AI. The result will be recorded on the leaderboard.
               </p>
               <div className="flex justify-end gap-2">

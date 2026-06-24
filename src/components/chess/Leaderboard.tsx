@@ -99,7 +99,7 @@ export function Leaderboard({ refreshKey }: { refreshKey: number }) {
               setOpen(true);
               void load();
             }}
-            className="flex items-center gap-2 rounded-full border border-amber-700/30 bg-gradient-to-br from-[#fbf6e9] to-[#e8d9b8] px-4 py-2.5 shadow-lg hover:shadow-xl"
+            className="flex items-center gap-2 rounded-full border border-primary/30 bg-gradient-to-br from-card to-muted px-4 py-2.5 shadow-lg hover:shadow-xl"
             initial={{ scale: 0.9, opacity: 0, y: 10 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.9, opacity: 0, y: 10 }}
@@ -112,11 +112,11 @@ export function Leaderboard({ refreshKey }: { refreshKey: number }) {
               transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
               className="inline-flex"
             >
-              <Trophy className="h-4 w-4 text-amber-700" />
+              <Trophy className="h-4 w-4 text-primary" />
             </motion.span>
-            <span className="text-xs font-semibold text-stone-800">Leaderboard</span>
+            <span className="text-xs font-semibold text-foreground">Leaderboard</span>
             {totalGames > 0 && (
-              <span className="rounded-full bg-stone-800 px-1.5 py-0.5 text-[10px] font-bold text-amber-50">
+              <span className="rounded-full bg-primary px-1.5 py-0.5 text-[10px] font-bold text-primary-foreground">
                 {totalGames}
               </span>
             )}
@@ -133,18 +133,18 @@ export function Leaderboard({ refreshKey }: { refreshKey: number }) {
       <AnimatePresence>
         {open && (
           <motion.div
-            className="absolute bottom-0 right-0 w-[min(92vw,360px)] overflow-hidden rounded-2xl border border-amber-700/30 bg-[#fbf6e9]/97 shadow-2xl backdrop-blur"
+            className="absolute bottom-0 right-0 w-[min(92vw,360px)] overflow-hidden rounded-2xl border border-border bg-card/97 shadow-2xl backdrop-blur"
             initial={{ scale: 0.9, opacity: 0, y: 20, transformOrigin: "bottom right" }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.9, opacity: 0, y: 20 }}
             transition={{ type: "spring", stiffness: 260, damping: 24 }}
           >
             {/* Header */}
-            <div className="flex items-center justify-between border-b border-amber-900/15 bg-gradient-to-r from-[#f3e9d2] to-[#e8d9b8] px-3 py-2.5">
+            <div className="flex items-center justify-between border-b border-border bg-gradient-to-r from-card to-muted px-3 py-2.5">
               <div className="flex items-center gap-2">
-                <Trophy className="h-4 w-4 text-amber-700" />
-                <span className="text-sm font-semibold text-stone-800">Leaderboard</span>
-                <span className="text-[10px] text-stone-500">
+                <Trophy className="h-4 w-4 text-primary" />
+                <span className="text-sm font-semibold text-foreground">Leaderboard</span>
+                <span className="text-[10px] text-muted-foreground">
                   {totalGames} game{totalGames === 1 ? "" : "s"}
                 </span>
               </div>
@@ -173,7 +173,7 @@ export function Leaderboard({ refreshKey }: { refreshKey: number }) {
             </div>
 
             {/* Tabs */}
-            <div className="flex border-b border-amber-900/10">
+            <div className="flex border-b border-border">
               {(["players", "recent"] as const).map((t) => (
                 <button
                   key={t}
@@ -182,8 +182,8 @@ export function Leaderboard({ refreshKey }: { refreshKey: number }) {
                   className={cn(
                     "flex-1 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider transition-colors",
                     tab === t
-                      ? "border-b-2 border-amber-700 text-stone-800"
-                      : "text-stone-500 hover:text-stone-700",
+                      ? "border-b-2 border-primary text-foreground"
+                      : "text-muted-foreground hover:text-foreground",
                   )}
                 >
                   {t === "players" ? "Top Players" : "Recent Games"}
@@ -197,7 +197,7 @@ export function Leaderboard({ refreshKey }: { refreshKey: number }) {
                 {loading ? (
                   <div className="space-y-2 p-3">
                     {[0, 1, 2, 3].map((i) => (
-                      <div key={i} className="h-12 animate-pulse rounded-md bg-amber-900/5" />
+                      <div key={i} className="h-12 animate-pulse rounded-md bg-primary/5" />
                     ))}
                   </div>
                 ) : tab === "players" ? (
@@ -218,7 +218,7 @@ function PlayersList({ data }: { data: LeaderboardData | null }) {
   const players = data?.topPlayers ?? [];
   if (players.length === 0) {
     return (
-      <div className="p-4 text-center text-xs text-stone-500">
+      <div className="p-4 text-center text-xs text-muted-foreground">
         No games recorded yet. Finish a match to claim your spot!
       </div>
     );
@@ -237,29 +237,29 @@ function PlayersList({ data }: { data: LeaderboardData | null }) {
             className={cn(
               "flex items-center gap-2 rounded-lg border px-2.5 py-2",
               rank <= 3
-                ? "border-amber-600/30 bg-gradient-to-r from-amber-50 to-transparent"
-                : "border-black/5 bg-white/50",
+                ? "border-primary/30 bg-gradient-to-r from-primary/10 to-transparent"
+                : "border-border bg-muted/50",
             )}
           >
-            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-stone-800 text-[11px] font-bold text-amber-50">
+            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary text-[11px] font-bold text-primary-foreground">
               {medal ?? rank}
             </div>
             <div className="min-w-0 flex-1">
               <div className="flex items-center justify-between gap-2">
-                <span className="truncate text-sm font-semibold text-stone-800">{p.playerName}</span>
+                <span className="truncate text-sm font-semibold text-foreground">{p.playerName}</span>
                 <span className="shrink-0 text-[10px] font-medium text-emerald-700">
                   {p.wins}W
                 </span>
               </div>
-              <div className="mt-0.5 flex items-center gap-2 text-[10px] text-stone-500">
+              <div className="mt-0.5 flex items-center gap-2 text-[10px] text-muted-foreground">
                 <span className="inline-flex items-center gap-0.5">
                   <Swords className="h-3 w-3" /> {p.games}
                 </span>
                 <span className="inline-flex items-center gap-0.5">
                   <Clock className="h-3 w-3" /> {fmtTime(p.fastestWinSec)}
                 </span>
-                <span className="text-stone-400">{p.avgWinMoves} moves/win</span>
-                <span className="ml-auto rounded bg-amber-100 px-1 text-[9px] font-semibold text-amber-800">
+                <span className="text-muted-foreground/60">{p.avgWinMoves} moves/win</span>
+                <span className="ml-auto rounded bg-primary/15 px-1 text-[9px] font-semibold text-primary">
                   {DIFF_LABEL[p.topDifficulty] ?? p.topDifficulty}
                 </span>
               </div>
@@ -275,7 +275,7 @@ function RecentList({ data }: { data: LeaderboardData | null }) {
   const games = data?.recentGames ?? [];
   if (games.length === 0) {
     return (
-      <div className="p-4 text-center text-xs text-stone-500">
+      <div className="p-4 text-center text-xs text-muted-foreground">
         No recent games. Play one!
       </div>
     );
@@ -292,7 +292,7 @@ function RecentList({ data }: { data: LeaderboardData | null }) {
             initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.03 }}
-            className="rounded-lg border border-black/5 bg-white/50 px-2.5 py-1.5"
+            className="rounded-lg border border-border bg-muted/50 px-2.5 py-1.5"
           >
             <div className="flex items-center justify-between gap-2">
               <div className="flex min-w-0 items-center gap-1.5">
@@ -302,12 +302,12 @@ function RecentList({ data }: { data: LeaderboardData | null }) {
                     won ? "bg-emerald-500" : drew ? "bg-stone-400" : "bg-rose-500",
                   )}
                 />
-                <span className="truncate text-xs font-semibold text-stone-800">{g.playerName}</span>
-                <span className="text-[9px] text-stone-400">vs {diff}</span>
+                <span className="truncate text-xs font-semibold text-foreground">{g.playerName}</span>
+                <span className="text-[9px] text-muted-foreground/60">vs {diff}</span>
               </div>
-              <span className="shrink-0 text-[10px] text-stone-400">{timeAgo(g.finishedAt)}</span>
+              <span className="shrink-0 text-[10px] text-muted-foreground/60">{timeAgo(g.finishedAt)}</span>
             </div>
-            <div className="mt-0.5 flex items-center justify-between gap-2 text-[10px] text-stone-500">
+            <div className="mt-0.5 flex items-center justify-between gap-2 text-[10px] text-muted-foreground">
               <span className="truncate">{g.resultLabel}</span>
               <span className="shrink-0 inline-flex items-center gap-1">
                 <Swords className="h-2.5 w-2.5" /> {g.moveCount}

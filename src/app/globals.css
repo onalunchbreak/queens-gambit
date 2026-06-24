@@ -37,79 +37,140 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
+  /* Chess-specific semantic colors (theme-aware) */
+  --color-parchment: var(--parchment);
+  --color-parchment-deep: var(--parchment-deep);
+  --color-mahogany: var(--mahogany);
+  --color-walnut: var(--walnut);
+  --color-maple: var(--maple);
+  --color-piece-ivory: var(--piece-ivory);
+  --color-piece-ebony: var(--piece-ebony);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
 }
 
+/* ──────────────────────────────────────────────────────────────
+   Harmon's Gambit — Light mode (warm parchment tournament hall)
+   ────────────────────────────────────────────────────────────── */
 :root {
   --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
+
+  /* shadcn core tokens — warm amber-tinted neutrals */
+  --background: oklch(0.975 0.012 75);          /* warm parchment */
+  --foreground: oklch(0.22 0.02 50);            /* deep mahogany ink */
+  --card: oklch(0.985 0.008 80);                /* cream card */
+  --card-foreground: oklch(0.22 0.02 50);
+  --popover: oklch(0.985 0.008 80);
+  --popover-foreground: oklch(0.22 0.02 50);
+  --primary: oklch(0.32 0.04 45);               /* rich mahogany */
+  --primary-foreground: oklch(0.97 0.015 80);
+  --secondary: oklch(0.94 0.015 70);
+  --secondary-foreground: oklch(0.25 0.02 50);
+  --muted: oklch(0.93 0.012 72);
+  --muted-foreground: oklch(0.5 0.02 55);
+  --accent: oklch(0.9 0.025 70);                /* warm amber tint */
+  --accent-foreground: oklch(0.25 0.02 50);
+  --destructive: oklch(0.58 0.22 27);
+  --border: oklch(0.86 0.015 65);
+  --input: oklch(0.9 0.012 70);
+  --ring: oklch(0.55 0.06 55);
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
   --chart-3: oklch(0.398 0.07 227.392);
   --chart-4: oklch(0.828 0.189 84.429);
   --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --sidebar: oklch(0.97 0.01 75);
+  --sidebar-foreground: oklch(0.22 0.02 50);
+  --sidebar-primary: oklch(0.32 0.04 45);
+  --sidebar-primary-foreground: oklch(0.97 0.015 80);
+  --sidebar-accent: oklch(0.9 0.025 70);
+  --sidebar-accent-foreground: oklch(0.25 0.02 50);
+  --sidebar-border: oklch(0.86 0.015 65);
+  --sidebar-ring: oklch(0.55 0.06 55);
+
+  /* Chess-specific tokens — light */
+  --parchment: #f7f1e3;
+  --parchment-deep: #efe6d0;
+  --mahogany: #2c1810;
+  --walnut: #b07d4e;        /* dark square base */
+  --walnut-deep: #94633a;   /* dark square deep */
+  --maple: #f0dcb4;         /* light square base */
+  --maple-deep: #e6cf95;    /* light square deep */
+  --piece-ivory: #f7efd9;
+  --piece-ivory-stroke: #3a2a18;
+  --piece-ebony: #1b140d;
+  --piece-ebony-stroke: #000000;
+  --frame-grad-1: #4a2c18;
+  --frame-grad-2: #2c1810;
+  --frame-grad-3: #3a2014;
+  --heat-warm: 255, 248, 220;   /* white influence (rgba-friendly) */
+  --heat-cool: 40, 20, 8;      /* black influence */
+  --last-move: 255, 209, 102;
+  --check: 220, 40, 40;
+  --legal-dot: 40, 80, 40;
+  --legal-ring: 120, 200, 120;
 }
 
+/* ──────────────────────────────────────────────────────────────
+   Harmon's Gambit — Dark mode (midnight tournament study)
+   Deep charcoal-brown ambiance, moodier wood, luminous pieces.
+   ────────────────────────────────────────────────────────────── */
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
+  --background: oklch(0.16 0.012 55);           /* deep charcoal-brown */
+  --foreground: oklch(0.92 0.015 75);           /* warm ivory text */
+  --card: oklch(0.21 0.014 55);                 /* raised dark card */
+  --card-foreground: oklch(0.92 0.015 75);
+  --popover: oklch(0.21 0.014 55);
+  --popover-foreground: oklch(0.92 0.015 75);
+  --primary: oklch(0.75 0.08 70);               /* luminous amber/bronze */
+  --primary-foreground: oklch(0.18 0.02 50);
+  --secondary: oklch(0.26 0.014 55);
+  --secondary-foreground: oklch(0.92 0.015 75);
+  --muted: oklch(0.25 0.012 55);
+  --muted-foreground: oklch(0.68 0.02 65);
+  --accent: oklch(0.32 0.04 50);                /* deep amber */
+  --accent-foreground: oklch(0.92 0.015 75);
+  --destructive: oklch(0.65 0.2 22);
   --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --input: oklch(1 0 0 / 14%);
+  --ring: oklch(0.65 0.08 65);
+  --chart-1: oklch(0.62 0.2 45);
+  --chart-2: oklch(0.65 0.14 185);
+  --chart-3: oklch(0.55 0.12 250);
+  --chart-4: oklch(0.7 0.16 80);
+  --chart-5: oklch(0.62 0.18 30);
+  --sidebar: oklch(0.21 0.014 55);
+  --sidebar-foreground: oklch(0.92 0.015 75);
+  --sidebar-primary: oklch(0.75 0.08 70);
+  --sidebar-primary-foreground: oklch(0.18 0.02 50);
+  --sidebar-accent: oklch(0.3 0.04 50);
+  --sidebar-accent-foreground: oklch(0.92 0.015 75);
   --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --sidebar-ring: oklch(0.65 0.08 65);
+
+  /* Chess-specific tokens — dark */
+  --parchment: #1a1612;
+  --parchment-deep: #15110d;
+  --mahogany: #c4a574;       /* lighter for contrast on dark */
+  --walnut: #5a3d24;         /* moodier dark square */
+  --walnut-deep: #4a321e;
+  --maple: #b89968;          /* deeper maple */
+  --maple-deep: #a3875a;
+  --piece-ivory: #f2e6c8;    /* luminous ivory */
+  --piece-ivory-stroke: #2a1d10;
+  --piece-ebony: #0a0805;    /* near-black */
+  --piece-ebony-stroke: #000000;
+  --frame-grad-1: #3a2616;
+  --frame-grad-2: #1a1108;
+  --frame-grad-3: #2a1c10;
+  --heat-warm: 255, 220, 140;
+  --heat-cool: 80, 50, 25;
+  --last-move: 255, 190, 70;
+  --check: 240, 70, 70;
+  --legal-dot: 120, 200, 120;
+  --legal-ring: 140, 220, 140;
 }
 
 @layer base {
@@ -121,15 +182,7 @@
   }
 }
 
-/* Harmon's Gambit — parchment tournament aesthetic */
-:root {
-  --parchment: #f7f1e3;
-  --parchment-deep: #efe6d0;
-  --mahogany: #2c1810;
-  --walnut: #94633a;
-  --maple: #f0dcb4;
-}
-
+/* Parchment texture background — adapts to theme */
 body {
   background-color: var(--parchment);
   background-image:
@@ -138,9 +191,23 @@ body {
     url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.35  0 0 0 0 0.25  0 0 0 0 0.12  0 0 0 0.05 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
 }
 
+.dark body {
+  background-image:
+    radial-gradient(ellipse at 20% 0%, rgba(196, 165, 116, 0.06), transparent 55%),
+    radial-gradient(ellipse at 80% 100%, rgba(120, 80, 40, 0.08), transparent 55%),
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.9  0 0 0 0 0.75  0 0 0 0 0.5  0 0 0 0.03 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+}
+
 .font-serif {
   font-family: "Georgia", "Iowan Old Style", "Palatino Linotype", "Book Antiqua", serif;
 }
+
+/* Smooth theme transition */
+*, *::before, *::after {
+  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.2s ease;
+}
+/* But don't transition transforms (framer-motion handles those) */
+html, body { scroll-behavior: smooth; }
 
 /* custom scrollbar for move history */
 .harmon-scroll::-webkit-scrollbar {
@@ -149,6 +216,9 @@ body {
 .harmon-scroll::-webkit-scrollbar-thumb {
   background: rgba(120, 80, 40, 0.35);
   border-radius: 4px;
+}
+.dark .harmon-scroll::-webkit-scrollbar-thumb {
+  background: rgba(196, 165, 116, 0.3);
 }
 .harmon-scroll::-webkit-scrollbar-track {
   background: transparent;

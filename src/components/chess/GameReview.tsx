@@ -7,13 +7,13 @@ import { AnnotationKind, ReviewResult } from "@/lib/chess/types";
 import { cn } from "@/lib/utils";
 
 const KIND_META: Record<AnnotationKind, { label: string; color: string; bg: string }> = {
-  brilliant: { label: "Brilliant", color: "#1caa6b", bg: "bg-emerald-100 text-emerald-800 border-emerald-300" },
-  best: { label: "Best move", color: "#2a8fd4", bg: "bg-sky-100 text-sky-800 border-sky-300" },
-  good: { label: "Good", color: "#7d8a99", bg: "bg-slate-100 text-slate-700 border-slate-300" },
-  inaccuracy: { label: "Inaccuracy", color: "#e0b13a", bg: "bg-amber-100 text-amber-800 border-amber-300" },
-  mistake: { label: "Mistake", color: "#e8833a", bg: "bg-orange-100 text-orange-800 border-orange-300" },
-  blunder: { label: "Blunder", color: "#d23b3b", bg: "bg-rose-100 text-rose-800 border-rose-300" },
-  book: { label: "Book", color: "#8a6d3b", bg: "bg-stone-100 text-stone-700 border-stone-300" },
+  brilliant: { label: "Brilliant", color: "#1caa6b", bg: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/30" },
+  best: { label: "Best move", color: "#2a8fd4", bg: "bg-sky-500/15 text-sky-700 dark:text-sky-400 border-sky-500/30" },
+  good: { label: "Good", color: "#7d8a99", bg: "bg-muted text-muted-foreground border-border" },
+  inaccuracy: { label: "Inaccuracy", color: "#e0b13a", bg: "bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/30" },
+  mistake: { label: "Mistake", color: "#e8833a", bg: "bg-orange-500/15 text-orange-700 dark:text-orange-400 border-orange-500/30" },
+  blunder: { label: "Blunder", color: "#d23b3b", bg: "bg-rose-500/15 text-rose-700 dark:text-rose-400 border-rose-500/30" },
+  book: { label: "Book", color: "#8a6d3b", bg: "bg-muted text-muted-foreground border-border" },
 };
 
 interface GameReviewProps {
@@ -34,11 +34,11 @@ export function GameReview({ review, reviewIndex, onChangeIndex, onClose, onRepl
   const delta = annotation ? (annotation.evalAfter - annotation.evalBefore) * (annotation.byColor === "w" ? 1 : -1) : 0;
 
   return (
-    <div className="flex flex-col gap-3 rounded-xl border border-amber-900/15 bg-[#fbf6e9]/90 p-3 shadow-sm">
+    <div className="flex flex-col gap-3 rounded-xl border border-border bg-card/90 p-3 shadow-sm">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Sparkles className="h-4 w-4 text-amber-700" />
-          <span className="text-sm font-semibold text-stone-800">Post-Game Review</span>
+          <Sparkles className="h-4 w-4 text-primary" />
+          <span className="text-sm font-semibold text-foreground">Post-Game Review</span>
         </div>
         <div className="flex items-center gap-1">
           <Button size="sm" variant="ghost" onClick={onReplay} className="h-7 text-xs">
@@ -51,7 +51,7 @@ export function GameReview({ review, reviewIndex, onChangeIndex, onClose, onRepl
       </div>
 
       {/* summary */}
-      <p className="text-xs text-stone-600 leading-relaxed">{review.summary}</p>
+      <p className="text-xs text-muted-foreground leading-relaxed">{review.summary}</p>
 
       {/* slider */}
       <div className="space-y-1.5">
@@ -90,7 +90,7 @@ export function GameReview({ review, reviewIndex, onChangeIndex, onClose, onRepl
 
       {/* current annotation detail */}
       {annotation ? (
-        <div className="rounded-lg border border-black/10 bg-white/70 p-2.5 text-xs">
+        <div className="rounded-lg border border-border bg-muted/70 p-2.5 text-xs">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2">
               <span
@@ -101,7 +101,7 @@ export function GameReview({ review, reviewIndex, onChangeIndex, onClose, onRepl
                 ) : null}
                 {KIND_META[annotation.kind].label}
               </span>
-              <span className="font-mono font-semibold text-stone-800">{annotation.san}</span>
+              <span className="font-mono font-semibold text-foreground">{annotation.san}</span>
             </div>
             <span className="text-[11px] text-muted-foreground">
               {annotation.byColor === "w" ? "White" : "Black"}
@@ -115,13 +115,13 @@ export function GameReview({ review, reviewIndex, onChangeIndex, onClose, onRepl
             </span>
           </div>
           {annotation.bestMoveSan && annotation.bestMoveSan !== annotation.san && (
-            <p className="mt-1.5 text-[11px] text-stone-500">
-              Engine suggests <span className="font-mono font-semibold text-stone-700">{annotation.bestMoveSan}</span> instead.
+            <p className="mt-1.5 text-[11px] text-muted-foreground">
+              Engine suggests <span className="font-mono font-semibold text-foreground">{annotation.bestMoveSan}</span> instead.
             </p>
           )}
         </div>
       ) : (
-        <div className="rounded-lg border border-black/10 bg-white/50 p-2.5 text-xs text-muted-foreground">
+        <div className="rounded-lg border border-border bg-muted/50 p-2.5 text-xs text-muted-foreground">
           {idx === 0 ? "Starting position. Drag the slider to walk through the game." : "Final position."}
         </div>
       )}

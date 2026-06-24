@@ -33,7 +33,7 @@ export function ThinkingIndicator({ difficulty }: { difficulty: string }) {
               style={{
                 fontFamily: FONT_STACK,
                 fontSize: 18,
-                color: i % 2 === 0 ? "#1b140d" : "#94633a",
+                color: i % 2 === 0 ? "var(--piece-ebony)" : "var(--walnut)",
               }}
               animate={{ rotate: -360 }}
               transition={{
@@ -61,15 +61,15 @@ export function ThinkingIndicator({ difficulty }: { difficulty: string }) {
           style={{
             x: "-50%",
             y: "-50%",
-            background: "#b07d4e",
-            boxShadow: "0 0 12px rgba(176,125,78,0.9)",
+            background: "var(--primary)",
+            boxShadow: "0 0 12px rgba(var(--last-move), 0.9)",
           }}
           animate={{ scale: [1, 1.4, 1], opacity: [0.7, 1, 0.7] }}
           transition={{ duration: 1.2, repeat: Infinity, ease: "easeInOut" }}
         />
       </div>
       <motion.div
-        className="text-sm font-medium text-amber-900/80"
+        className="text-sm font-medium text-primary"
         animate={{ opacity: [0.5, 1, 0.5] }}
         transition={{ duration: 1.4, repeat: Infinity, ease: "easeInOut" }}
       >

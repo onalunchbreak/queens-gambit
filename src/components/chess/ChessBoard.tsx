@@ -63,17 +63,17 @@ export function ChessBoard({
     ? pieceMap.get(lastMove.to)?.id ?? null
     : null;
 
-  // Precompute heatmap cell colors.
+  // Precompute heatmap cell colors using theme-aware rgba channels.
   const heatmapCells = useMemo(() => {
+    const warm = "var(--heat-warm)";
+    const cool = "var(--heat-cool)";
     return heatmap.map((v) => {
       const intensity = Math.min(1, Math.abs(v));
       if (v > 0.02) {
-        // white influence — warm cream / ivory tint
-        return `rgba(255, 248, 220, ${0.12 + intensity * 0.55})`;
+        return `rgba(${warm}, ${0.12 + intensity * 0.55})`;
       }
       if (v < -0.02) {
-        // black influence — deep umber tint
-        return `rgba(40, 20, 8, ${0.12 + intensity * 0.55})`;
+        return `rgba(${cool}, ${0.12 + intensity * 0.55})`;
       }
       return "rgba(0,0,0,0)";
     });
@@ -86,7 +86,7 @@ export function ChessBoard({
         className="absolute -inset-[2.2%] rounded-[10px] shadow-2xl"
         style={{
           background:
-            "linear-gradient(135deg, #4a2c18 0%, #2c1810 45%, #3a2014 100%)",
+            "linear-gradient(135deg, var(--frame-grad-1) 0%, var(--frame-grad-2) 45%, var(--frame-grad-3) 100%)",
           boxShadow:
             "inset 0 1px 0 rgba(255,255,255,0.08), inset 0 0 0 1px rgba(0,0,0,0.6), 0 18px 40px rgba(0,0,0,0.45)",
         }}
@@ -108,11 +108,11 @@ export function ChessBoard({
               reviewActive && reviewMarker && reviewMarker.square === square;
 
             const base = isLight
-              ? "linear-gradient(135deg, #f0dcb4 0%, #e6cf95 100%)"
-              : "linear-gradient(135deg, #b07d4e 0%, #94633a 100%)";
+              ? "linear-gradient(135deg, var(--maple) 0%, var(--maple-deep) 100%)"
+              : "linear-gradient(135deg, var(--walnut) 0%, var(--walnut-deep) 100%)";
             const grain = isLight
               ? "repeating-linear-gradient(90deg, rgba(120,80,30,0.05) 0 1px, rgba(255,250,235,0) 1px 5px)"
-              : "repeating-linear-gradient(90deg, rgba(20,10,0,0.10) 0 1px, rgba(255,250,235,0) 1px 5px)";
+              : "repeating-linear-gradient(90deg, rgba(20,10,0,0.12) 0 1px, rgba(255,250,235,0) 1px 5px)";
 
             return (
               <button
@@ -130,7 +130,7 @@ export function ChessBoard({
                 {isLastMove && (
                   <motion.span
                     className="absolute inset-0 pointer-events-none"
-                    style={{ background: "rgba(255, 209, 102, 0.42)" }}
+                    style={{ background: "rgba(var(--last-move), 0.42)" }}
                     animate={{ opacity: [0.55, 0.85, 0.55] }}
                     transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
                   />
@@ -139,7 +139,7 @@ export function ChessBoard({
                 {isSelected && (
                   <span
                     className="absolute inset-0 pointer-events-none"
-                    style={{ background: "rgba(255, 209, 102, 0.6)", boxShadow: "inset 0 0 0 3px rgba(255,180,40,0.85)" }}
+                    style={{ background: "rgba(var(--last-move), 0.6)", boxShadow: "inset 0 0 0 3px rgba(var(--last-move), 0.85)" }}
                   />
                 )}
                 {/* check highlight */}
@@ -148,7 +148,7 @@ export function ChessBoard({
                     className="absolute inset-0 pointer-events-none"
                     style={{
                       background:
-                        "radial-gradient(circle at 50% 50%, rgba(220,40,40,0.85), rgba(220,40,40,0) 70%)",
+                        "radial-gradient(circle at 50% 50%, rgba(var(--check), 0.85), rgba(var(--check), 0) 70%)",
                     }}
                     animate={{ opacity: [0.5, 0.9, 0.5] }}
                     transition={{ duration: 0.9, repeat: Infinity, ease: "easeInOut" }}
@@ -159,7 +159,7 @@ export function ChessBoard({
                   <span
                     className="absolute bottom-0.5 right-1 text-[9px] sm:text-[10px] font-semibold pointer-events-none"
                     style={{
-                      color: isLight ? "#94633a" : "#f0dcb4",
+                      color: isLight ? "var(--walnut-deep)" : "var(--maple)",
                       opacity: 0.85,
                     }}
                   >
@@ -170,7 +170,7 @@ export function ChessBoard({
                   <span
                     className="absolute top-0.5 left-1 text-[9px] sm:text-[10px] font-semibold pointer-events-none"
                     style={{
-                      color: isLight ? "#94633a" : "#f0dcb4",
+                      color: isLight ? "var(--walnut-deep)" : "var(--maple)",
                       opacity: 0.85,
                     }}
                   >
@@ -186,8 +186,8 @@ export function ChessBoard({
                         style={{
                           width: "86%",
                           height: "86%",
-                          border: "3px solid rgba(40,80,40,0.55)",
-                          background: "rgba(120,200,120,0.18)",
+                          border: "3px solid rgba(var(--legal-dot), 0.6)",
+                          background: "rgba(var(--legal-ring), 0.2)",
                         }}
                       />
                     ) : (
@@ -196,7 +196,7 @@ export function ChessBoard({
                         style={{
                           width: "30%",
                           height: "30%",
-                          background: "rgba(40,80,40,0.5)",
+                          background: "rgba(var(--legal-dot), 0.55)",
                         }}
                       />
                     )}

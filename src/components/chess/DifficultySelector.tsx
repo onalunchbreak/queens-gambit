@@ -10,22 +10,12 @@ interface DifficultySelectorProps {
   disabled?: boolean;
 }
 
-const RANK_STYLES: Record<Difficulty, { ring: string; badge: string; active: string }> = {
-  novice: {
-    ring: "border-emerald-300",
-    badge: "bg-emerald-600 text-white",
-    active: "ring-2 ring-emerald-500 bg-emerald-50",
-  },
-  club: {
-    ring: "border-amber-300",
-    badge: "bg-amber-600 text-white",
-    active: "ring-2 ring-amber-500 bg-amber-50",
-  },
-  master: {
-    ring: "border-rose-400",
-    badge: "bg-gradient-to-br from-rose-700 to-rose-900 text-amber-100",
-    active: "ring-2 ring-rose-500 bg-rose-50",
-  },
+// Each level is distinguished by the number of filled rank pips (chevrons)
+// rather than garish colors. A single accent ring marks the active card.
+const PIP_COUNT: Record<Difficulty, number> = {
+  novice: 1,
+  club: 2,
+  master: 3,
 };
 
 export function DifficultySelector({ value, onChange, disabled }: DifficultySelectorProps) {
@@ -33,7 +23,7 @@ export function DifficultySelector({ value, onChange, disabled }: DifficultySele
     <div className="grid grid-cols-3 gap-2">
       {DIFFICULTIES.map((d) => {
         const active = value === d.id;
-        const s = RANK_STYLES[d.id];
+        const pips = PIP_COUNT[d.id];
         return (
           <motion.button
             key={d.id}
@@ -43,23 +33,31 @@ export function DifficultySelector({ value, onChange, disabled }: DifficultySele
             whileHover={disabled ? undefined : { y: -2 }}
             whileTap={disabled ? undefined : { scale: 0.97 }}
             className={cn(
-              "relative flex flex-col items-center gap-1 rounded-lg border-2 bg-white/80 px-2 py-2 text-center transition-colors",
-              s.ring,
-              active ? s.active : "opacity-70 hover:opacity-100",
+              "relative flex flex-col items-center gap-1.5 rounded-lg border bg-card/80 px-2 py-2.5 text-center transition-all",
+              active
+                ? "border-primary shadow-sm ring-1 ring-primary/40"
+                : "border-border opacity-65 hover:opacity-100 hover:border-muted-foreground/40",
               disabled && "cursor-not-allowed opacity-50",
             )}
+            aria-pressed={active}
           >
-            {/* rank badge */}
-            <span
-              className={cn(
-                "absolute -top-2 -right-2 flex h-6 w-6 items-center justify-center rounded-full text-[11px] font-bold shadow-md",
-                s.badge,
-              )}
-            >
-              {d.rank}
+            {/* Rank pips — small chevrons stacked, filled count = level */}
+            <div className="flex items-end gap-0.5 h-4" aria-hidden>
+              {Array.from({ length: 3 }).map((_, i) => (
+                <span
+                  key={i}
+                  className={cn(
+                    "w-1 rounded-sm transition-colors",
+                    i < pips ? "bg-primary" : "bg-muted-foreground/25",
+                  )}
+                  style={{ height: `${6 + i * 3}px` }}
+                />
+              ))}
+            </div>
+            <span className="text-[12.5px] font-semibold leading-tight text-card-foreground">
+              {d.label}
             </span>
-            <span className="text-[13px] font-semibold text-stone-800">{d.label}</span>
-            <span className="text-[10px] text-muted-foreground">{d.elo}</span>
+            <span className="text-[10px] tabular-nums text-muted-foreground">{d.elo}</span>
           </motion.button>
         );
       })}

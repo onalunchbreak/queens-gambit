@@ -24,14 +24,15 @@ export function MoveHistory({ sans, reviewActive, reviewIndex, onJump }: MoveHis
   }
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full min-h-0">
       <div className="flex items-center justify-between px-1 pb-1.5">
         <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
           Moves
         </span>
-        <span className="text-[11px] text-muted-foreground">{sans.length} ply</span>
+        <span className="text-[11px] text-muted-foreground tabular-nums">{sans.length} ply</span>
       </div>
-      <ScrollArea className="flex-1 max-h-44 rounded-md border border-black/10 bg-[#fbf6e9]/60">
+      {/* Fixed-height scroll container so long games never overflow the card. */}
+      <ScrollArea className="h-40 max-h-40 w-full rounded-md border border-border bg-card/60">
         <div className="p-1">
           {rows.length === 0 ? (
             <div className="px-2 py-3 text-xs text-muted-foreground italic">
@@ -42,7 +43,7 @@ export function MoveHistory({ sans, reviewActive, reviewIndex, onJump }: MoveHis
               {rows.map((row) => (
                 <div
                   key={row.num}
-                  className="grid grid-cols-[2rem_1fr_1fr] items-center text-sm rounded-sm"
+                  className="grid grid-cols-[1.75rem_minmax(0,1fr)_minmax(0,1fr)] items-center text-sm rounded-sm"
                 >
                   <span className="text-[11px] text-muted-foreground tabular-nums px-1">
                     {row.num}.
@@ -53,10 +54,11 @@ export function MoveHistory({ sans, reviewActive, reviewIndex, onJump }: MoveHis
                       disabled={!reviewActive}
                       onClick={() => row.whitePly && onJump?.(row.whitePly!)}
                       className={cn(
-                        "text-left px-1.5 py-0.5 rounded font-mono text-[13px] tabular-nums",
-                        reviewActive && "hover:bg-amber-200/40 cursor-pointer",
-                        reviewActive && reviewIndex === row.whitePly && "bg-amber-300/50 font-semibold",
+                        "text-left px-1.5 py-0.5 rounded font-mono text-[12px] tabular-nums truncate",
+                        reviewActive && "hover:bg-accent cursor-pointer",
+                        reviewActive && reviewIndex === row.whitePly && "bg-primary/20 font-semibold",
                       )}
+                      title={row.white}
                     >
                       {row.white}
                     </button>
@@ -69,10 +71,11 @@ export function MoveHistory({ sans, reviewActive, reviewIndex, onJump }: MoveHis
                       disabled={!reviewActive}
                       onClick={() => row.blackPly && onJump?.(row.blackPly!)}
                       className={cn(
-                        "text-left px-1.5 py-0.5 rounded font-mono text-[13px] tabular-nums",
-                        reviewActive && "hover:bg-amber-200/40 cursor-pointer",
-                        reviewActive && reviewIndex === row.blackPly && "bg-amber-300/50 font-semibold",
+                        "text-left px-1.5 py-0.5 rounded font-mono text-[12px] tabular-nums truncate",
+                        reviewActive && "hover:bg-accent cursor-pointer",
+                        reviewActive && reviewIndex === row.blackPly && "bg-primary/20 font-semibold",
                       )}
+                      title={row.black}
                     >
                       {row.black}
                     </button>

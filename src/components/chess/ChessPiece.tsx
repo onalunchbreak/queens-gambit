@@ -36,8 +36,8 @@ export function ChessPiece({
   const glyph = GLYPH[piece.type];
   const isWhite = piece.color === "w";
 
-  const fill = isWhite ? "#f7efd9" : "#1b140d";
-  const stroke = isWhite ? "#3a2a18" : "#000000";
+  const fill = isWhite ? "var(--piece-ivory)" : "var(--piece-ebony)";
+  const stroke = isWhite ? "var(--piece-ivory-stroke)" : "var(--piece-ebony-stroke)";
   const strokeWidth = isWhite ? 1.1 : 0.7;
 
   const innerKey = isMover ? `${piece.id}-${moveNonce}` : piece.id;

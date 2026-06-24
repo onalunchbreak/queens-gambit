@@ -23,28 +23,28 @@ export function EvalBar({ prob, evalCp, label, gameOver }: EvalBarProps) {
   return (
     <div className="flex items-stretch gap-2">
       <div
-        className="relative w-5 sm:w-6 rounded-md overflow-hidden border border-black/30 shadow-inner"
-        style={{ height: 220, background: "#1b140d" }}
+        className="relative w-5 sm:w-6 rounded-md overflow-hidden border border-border shadow-inner"
+        style={{ height: 220, background: "var(--piece-ebony)" }}
         aria-label="Evaluation bar"
       >
         <motion.div
           className="absolute left-0 right-0 bottom-0"
           style={{
-            background: "linear-gradient(180deg, #fbf3df 0%, #efe2c2 100%)",
+            background: "linear-gradient(180deg, var(--piece-ivory) 0%, var(--maple) 100%)",
           }}
           initial={false}
           animate={{ height: `${whitePct}%` }}
           transition={{ type: "spring", stiffness: 120, damping: 20 }}
         />
         {/* center line */}
-        <div className="absolute left-0 right-0 top-1/2 h-px bg-black/40" />
+        <div className="absolute left-0 right-0 top-1/2 h-px bg-foreground/30" />
         {/* eval text */}
         <div
           className="absolute left-0 right-0 text-center text-[10px] font-bold tracking-tight"
           style={{
             top: whitePct > 50 ? "6px" : "auto",
             bottom: whitePct > 50 ? "auto" : "6px",
-            color: whitePct > 50 ? "#3a2a18" : "#f3ead4",
+            color: whitePct > 50 ? "var(--piece-ivory-stroke)" : "var(--piece-ivory)",
           }}
         >
           {evalText}
@@ -52,16 +52,16 @@ export function EvalBar({ prob, evalCp, label, gameOver }: EvalBarProps) {
       </div>
       <div className="flex flex-col justify-between py-1 text-xs">
         <div>
-          <div className="font-semibold text-[11px] uppercase tracking-wider text-amber-800/80">
+          <div className="font-semibold text-[11px] uppercase tracking-wider text-amber-700/80 dark:text-amber-400/80">
             Black
           </div>
           <div className="text-[11px] text-muted-foreground">Harmon AI</div>
         </div>
         <div className="text-center">
-          <div className="font-medium text-[11px] leading-tight">{label}</div>
+          <div className="font-medium text-[11px] leading-tight text-foreground/80">{label}</div>
         </div>
         <div className="text-right">
-          <div className="font-semibold text-[11px] uppercase tracking-wider text-emerald-700/80">
+          <div className="font-semibold text-[11px] uppercase tracking-wider text-emerald-700/80 dark:text-emerald-400/80">
             White
           </div>
           <div className="text-[11px] text-muted-foreground">

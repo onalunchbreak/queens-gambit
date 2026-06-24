@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { DifficultySelector } from "./DifficultySelector";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { Difficulty } from "@/lib/chess/types";
 
 const FONT_STACK =
@@ -25,13 +26,18 @@ export function EntryScreen({ onStart }: EntryScreenProps) {
 
   return (
     <div className="relative min-h-screen flex flex-col items-center justify-center px-4 pt-10">
+      {/* Theme toggle (top-right) */}
+      <div className="absolute top-4 right-4 z-10">
+        <ThemeToggle />
+      </div>
+
       {/* ambient board motif */}
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 opacity-[0.06]"
+        className="pointer-events-none absolute inset-0 opacity-[0.05] dark:opacity-[0.08]"
         style={{
           backgroundImage:
-            "linear-gradient(45deg, #2c1810 25%, transparent 25%, transparent 75%, #2c1810 75%), linear-gradient(45deg, #2c1810 25%, transparent 25%, transparent 75%, #2c1810 75%)",
+            "linear-gradient(45deg, var(--mahogany) 25%, transparent 25%, transparent 75%, var(--mahogany) 75%), linear-gradient(45deg, var(--mahogany) 25%, transparent 25%, transparent 75%, var(--mahogany) 75%)",
           backgroundSize: "48px 48px",
           backgroundPosition: "0 0, 24px 24px",
         }}
@@ -49,30 +55,30 @@ export function EntryScreen({ onStart }: EntryScreenProps) {
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ delay: 0.15, duration: 0.6, ease: "easeOut" }}
-            className="flex h-20 w-20 items-center justify-center rounded-full border-2 border-amber-700/40 bg-gradient-to-br from-[#fbf6e9] to-[#e8d9b8] shadow-lg"
+            className="flex h-20 w-20 items-center justify-center rounded-full border-2 border-primary/40 bg-gradient-to-br from-card to-muted shadow-lg"
           >
             <span
               style={{
                 fontFamily: FONT_STACK,
                 fontSize: 44,
-                color: "#3a2a18",
-                WebkitTextStroke: "1px #2c1810",
+                color: "var(--piece-ivory-stroke)",
+                WebkitTextStroke: `1px var(--piece-ebony)`,
                 lineHeight: 1,
               }}
             >
               {"\u265E"}
             </span>
           </motion.div>
-          <h1 className="mt-4 font-serif text-4xl font-semibold tracking-tight text-stone-800">
+          <h1 className="mt-4 font-serif text-4xl font-semibold tracking-tight text-foreground">
             Harmon&apos;s Gambit
           </h1>
-          <p className="mt-1.5 text-sm text-stone-500 italic">
+          <p className="mt-1.5 text-sm text-muted-foreground italic">
             &ldquo;The only thing anyone ever gets good at is the thing they love.&rdquo;
           </p>
         </div>
 
-        <div className="rounded-2xl border border-amber-900/15 bg-[#fbf6e9]/95 p-6 shadow-xl backdrop-blur">
-          <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-stone-600">
+        <div className="rounded-2xl border border-border bg-card/95 p-6 shadow-xl backdrop-blur">
+          <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
             Your name
           </label>
           <Input
@@ -83,12 +89,12 @@ export function EntryScreen({ onStart }: EntryScreenProps) {
               if (e.key === "Enter") submit();
             }}
             placeholder="e.g. Beth"
-            className="h-11 border-amber-900/20 bg-white/80 text-base"
+            className="h-11 bg-background/80 text-base"
             maxLength={24}
           />
 
           <div className="mt-5">
-            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-stone-600">
+            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Choose your opponent
             </label>
             <DifficultySelector value={difficulty} onChange={setDifficulty} />
@@ -96,18 +102,18 @@ export function EntryScreen({ onStart }: EntryScreenProps) {
 
           <Button
             onClick={submit}
-            className="mt-6 h-11 w-full bg-gradient-to-b from-stone-800 to-stone-900 text-base font-medium text-amber-50 hover:from-stone-700 hover:to-stone-800"
+            className="mt-6 h-11 w-full bg-gradient-to-b from-primary to-primary text-base font-medium text-primary-foreground hover:opacity-90"
           >
             Begin the Match
           </Button>
         </div>
 
-        <p className="mt-4 text-center text-[11px] text-stone-400">
+        <p className="mt-4 text-center text-[11px] text-muted-foreground">
           You play White against the Harmon engine.
         </p>
       </motion.div>
 
-      <footer className="mt-auto py-3 text-center text-[11px] text-stone-500">
+      <footer className="mt-auto py-3 text-center text-[11px] text-muted-foreground">
         Harmon&apos;s Gambit &mdash; AlphaZero meets the World Chess Championship.
       </footer>
     </div>
