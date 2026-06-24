@@ -166,3 +166,16 @@ Work Log:
 
 Stage Summary:
 - Animated confetti + celebratory banner now fires on EVERY game end: player win (green "Victory!"), AI win / resign (red "Harmon Wins"), and draw (golden "Draw"). Each with a distinct color palette and the actual result label as subtitle.
+
+---
+Task ID: 8
+Agent: main
+Task: Fix hydration mismatch error on <body>.
+
+Work Log:
+- Root cause: the Grammarly browser extension injects `data-gr-ext-installed` and `data-new-gr-c-s-check-loaded` attributes onto <body> after SSR but before React hydrates, causing a hydration mismatch. This is NOT an app-code bug — the React error message itself notes browser extensions as a cause.
+- Fix: added `suppressHydrationWarning` to the <body> tag in src/app/layout.tsx (the <html> tag already had it). This is React's recommended approach for browser-extension-injected attributes — it tells React to ignore attribute-only differences on that element during hydration, while still hydrating children correctly.
+- Verified: no hydration errors on entry screen or after navigating into the game. Lint clean.
+
+Stage Summary:
+- Hydration mismatch resolved with a one-line, framework-recommended fix.
