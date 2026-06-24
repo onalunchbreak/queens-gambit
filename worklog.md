@@ -145,3 +145,24 @@ Work Log:
 
 Stage Summary:
 - Players can now choose White, Black, or Random. Board flips for Black, AI opens when player is Black. Captures are tracked with a 3D animated fly-off to side trays showing material balance. Dark-mode logo fixed. All verified end-to-end.
+
+---
+Task ID: 7
+Agent: main
+Task: Confetti on every game end (win/loss/draw) + celebratory banner.
+
+Work Log:
+- Hook: changed confetti trigger from `winner === "player" || winner === "ai"` to `gameOver` (any ending) in both applyMove and requestAiMove paths. Resign already always bumped. Now draws (stalemate, insufficient material, threefold repetition) also fire confetti.
+- Confetti component rewrite:
+  - Now fires for winner === "draw" too (was previously early-returned).
+  - Three palettes: PLAYER_COLORS (emerald/azure/gold — victory), AI_COLORS (rose/umber — Harmon wins), DRAW_COLORS (golden multi-color — draw).
+  - Three particle shapes: rect, circle, and streamer (long thin ribbons) for richer celebration.
+  - Particle counts: player win 140, draw 130, AI win 90 (draws and wins get bigger celebrations).
+  - Added celebratory banner overlay: a centered glass card with a large serif headline ("Victory!" / "Harmon Wins" / "Draw") in the outcome accent color, plus the result label as subtitle (e.g. "White wins by checkmate", "Black wins by resignation", "Draw — Stalemate"). Spring entrance + pulsing scale on the headline.
+  - Banner auto-fades after ~3.2s; confetti runs ~4.8s.
+- GameScreen: passes `resultLabel={state.gameResult}` to Confetti so the banner shows the exact result.
+- VLM-verified: player win → green "Victory!" banner with blue/green/yellow confetti; resign → red "Harmon Wins" banner with red/yellow/brown confetti. Draw path uses identical mechanism with golden palette + "Draw" banner.
+- Lint clean, no console/runtime errors. Cleaned test DB records.
+
+Stage Summary:
+- Animated confetti + celebratory banner now fires on EVERY game end: player win (green "Victory!"), AI win / resign (red "Harmon Wins"), and draw (golden "Draw"). Each with a distinct color palette and the actual result label as subtitle.

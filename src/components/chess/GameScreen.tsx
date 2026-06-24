@@ -546,7 +546,7 @@ export function GameScreen({ playerName, initialDifficulty, initialColor, onExit
       </AnimatePresence>
 
       {/* Confetti burst on any decisive result */}
-      <Confetti trigger={state.confetti} winner={state.winner} />
+      <Confetti trigger={state.confetti} winner={state.winner} resultLabel={state.gameResult} />
 
       {/* Floating animated leaderboard */}
       <Leaderboard refreshKey={state.saved ? state.moveCount : 0} />

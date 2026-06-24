@@ -260,7 +260,8 @@ export function useChessGame() {
           if (gameOver) setTimeout(() => soundManager.gameEnd(), 220);
         }
 
-        const confettiBump = winner === "player" || winner === "ai" ? prev.confetti + 1 : prev.confetti;
+        // Fire confetti on EVERY game end — win, loss, or draw.
+        const confettiBump = gameOver ? prev.confetti + 1 : prev.confetti;
 
         return {
           ...prev,
@@ -403,7 +404,7 @@ export function useChessGame() {
         gameResult: data.gameResult ?? prev.gameResult,
         winner: winner ?? prev.winner,
         confetti:
-          winner === "player" || winner === "ai" ? prev.confetti + 1 : prev.confetti,
+          data.gameOver ? prev.confetti + 1 : prev.confetti,
       }));
 
       // LLM narration.
