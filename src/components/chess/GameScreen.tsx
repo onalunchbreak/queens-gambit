@@ -15,6 +15,7 @@ import {
   Crown,
   Brain,
   MessageSquareQuote,
+  Flag,
 } from "lucide-react";
 import { ChessBoard } from "./ChessBoard";
 import { EvalBar } from "./EvalBar";
@@ -22,6 +23,8 @@ import { MoveHistory } from "./MoveHistory";
 import { DifficultySelector } from "./DifficultySelector";
 import { ThinkingIndicator } from "./ThinkingIndicator";
 import { GameReview } from "./GameReview";
+import { Confetti } from "./Confetti";
+import { Leaderboard } from "./Leaderboard";
 import { useChessGame, START_FEN } from "./useChessGame";
 import { reviewPosition } from "./review-util";
 import { soundManager } from "./sounds";
@@ -47,11 +50,17 @@ export function GameScreen({ playerName, initialDifficulty, onExit }: GameScreen
   const game = useChessGame();
   const { state } = game;
   const [soundOn, setSoundOn] = useState(true);
+  const [confirmResign, setConfirmResign] = useState(false);
 
   // Initialize difficulty from entry screen (once).
   useEffect(() => {
     game.setDifficulty(initialDifficulty);
   }, [initialDifficulty]);
+
+  // Keep the player name in the hook's ref (for DB persistence on game end).
+  useEffect(() => {
+    game.setPlayerName(playerName);
+  }, [playerName, game]);
 
   // Sync sound manager with toggle.
   useEffect(() => {
@@ -195,6 +204,15 @@ export function GameScreen({ playerName, initialDifficulty, onExit }: GameScreen
             >
               <Flame className="h-3.5 w-3.5 mr-1" />
               {state.reviewLoading ? "Analyzing…" : "Review Game"}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8 border-rose-400/60 text-rose-700 hover:bg-rose-50"
+              onClick={() => setConfirmResign(true)}
+              disabled={state.isAiThinking || state.gameOver}
+            >
+              <Flag className="h-3.5 w-3.5 mr-1" /> Resign
             </Button>
           </div>
         </div>
@@ -350,11 +368,30 @@ export function GameScreen({ playerName, initialDifficulty, onExit }: GameScreen
                 initial={{ opacity: 0, scale: 0.96 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0 }}
-                className="rounded-xl border border-amber-700/30 bg-gradient-to-br from-[#fbf6e9] to-[#e8d9b8] p-4 text-center shadow-md"
+                className={
+                  state.winner === "player"
+                    ? "rounded-xl border border-emerald-500/40 bg-gradient-to-br from-emerald-50 to-[#e8d9b8] p-4 text-center shadow-md"
+                    : state.winner === "ai"
+                      ? "rounded-xl border border-rose-400/40 bg-gradient-to-br from-rose-50 to-[#e8d9b8] p-4 text-center shadow-md"
+                      : "rounded-xl border border-amber-700/30 bg-gradient-to-br from-[#fbf6e9] to-[#e8d9b8] p-4 text-center shadow-md"
+                }
               >
-                <Crown className="mx-auto mb-1 h-5 w-5 text-amber-700" />
+                <Crown
+                  className={
+                    "mx-auto mb-1 h-5 w-5 " +
+                    (state.winner === "player"
+                      ? "text-emerald-600"
+                      : state.winner === "ai"
+                        ? "text-rose-600"
+                        : "text-amber-700")
+                  }
+                />
                 <p className="text-sm font-semibold text-stone-800">{state.gameResult}</p>
-                <p className="mt-1 text-xs text-stone-500">Press Review Game for a full analysis.</p>
+                <p className="mt-1 text-xs text-stone-500">
+                  {state.saved
+                    ? "Saved to the leaderboard. Press Review Game for analysis."
+                    : "Press Review Game for a full analysis."}
+                </p>
               </motion.div>
             )}
           </AnimatePresence>
@@ -402,6 +439,56 @@ export function GameScreen({ playerName, initialDifficulty, onExit }: GameScreen
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Resign confirmation dialog */}
+      <AnimatePresence>
+        {confirmResign && (
+          <motion.div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setConfirmResign(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, y: 10 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 10 }}
+              onClick={(e) => e.stopPropagation()}
+              className="w-[min(90vw,360px)] rounded-2xl border border-rose-300/50 bg-[#fbf6e9] p-5 shadow-2xl"
+            >
+              <div className="mb-2 flex items-center gap-2">
+                <Flag className="h-5 w-5 text-rose-600" />
+                <span className="text-base font-semibold text-stone-800">Resign the game?</span>
+              </div>
+              <p className="mb-4 text-sm text-stone-600">
+                You will concede the match to Harmon AI. The result will be recorded on the leaderboard.
+              </p>
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" size="sm" onClick={() => setConfirmResign(false)}>
+                  Keep playing
+                </Button>
+                <Button
+                  size="sm"
+                  className="bg-rose-600 text-white hover:bg-rose-700"
+                  onClick={() => {
+                    setConfirmResign(false);
+                    game.resign();
+                  }}
+                >
+                  <Flag className="h-3.5 w-3.5 mr-1" /> Resign
+                </Button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Confetti burst on any decisive result */}
+      <Confetti trigger={state.confetti} winner={state.winner} />
+
+      {/* Floating animated leaderboard */}
+      <Leaderboard refreshKey={state.saved ? state.moveCount : 0} />
     </div>
   );
 }

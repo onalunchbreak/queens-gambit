@@ -1,9 +1,6 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -13,20 +10,34 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  name      String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
+// A finished chess game session on Harmon's Gambit.
+model GameSession {
+  id          String   @id @default(cuid())
+  // Player display name (entered on the entry screen).
+  playerName  String
+  // "w" or "b" — the color the human played.
+  playerColor String
+  // AI difficulty: novice | club | master
+  difficulty  String
+  // Final result category: "player_win" | "ai_win" | "draw"
+  result      String
+  // Who won: "player" | "ai" | "draw"
+  winner      String
+  // Human-readable result, e.g. "White wins by checkmate"
+  resultLabel String
+  // Number of half-moves (ply) played.
+  moveCount   Int
+  // Wall-clock duration in seconds from first move to game end.
+  durationSec Int
+  // Full SAN move list joined by spaces, for later study.
+  moves       String
+  // Final FEN of the game.
+  finalFen    String
+  startedAt   DateTime
+  finishedAt  DateTime @default(now())
 
-model Post {
-  id        String   @id @default(cuid())
-  title     String
-  content   String?
-  published Boolean  @default(false)
-  authorId  String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  @@index([playerName])
+  @@index([difficulty])
+  @@index([winner])
+  @@index([finishedAt])
 }

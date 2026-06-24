@@ -75,6 +75,14 @@ export interface GameState {
   moveCount: number;
   playerColor: "w";
   aiColor: "b";
+  // Who won this game once it ends: "player" | "ai" | "draw" | null
+  winner: "player" | "ai" | "draw" | null;
+  // Whether the game ended because the player resigned.
+  resigned: boolean;
+  // Whether the current finished game has been persisted to the database.
+  saved: boolean;
+  // Confetti trigger: increments each time a win-event should fire confetti.
+  confetti: number;
 }
 
 const START_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
@@ -82,9 +90,13 @@ const START_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 export function useChessGame() {
   const gameRef = useRef<Chess>(new Chess(START_FEN));
   const difficultyRef = useRef<Difficulty>("club");
+  const startedAtRef = useRef<number>(Date.now());
+  const playerNameRef = useRef<string>("Player");
+  const savedRef = useRef<boolean>(false); // guards against double-saves
   const [state, setState] = useState<GameState>(() => {
     const g = gameRef.current;
     const evalCp = evaluate(g);
+    startedAtRef.current = Date.now();
     return {
       pieces: buildInitialPieces(START_FEN),
       fen: g.fen(),
@@ -112,6 +124,10 @@ export function useChessGame() {
       moveCount: 0,
       playerColor: "w",
       aiColor: "b",
+      winner: null,
+      resigned: false,
+      saved: false,
+      confetti: 0,
     };
   });
 
@@ -179,19 +195,37 @@ export function useChessGame() {
         const lastMove = { from, to };
         const gameOver = game.isGameOver();
         let gameResult: string | null = null;
+        let winner: "player" | "ai" | "draw" | null = null;
         if (gameOver) {
           if (game.isCheckmate()) {
-            gameResult = game.turn() === "w" ? "Black wins by checkmate" : "White wins by checkmate";
-          } else if (game.isStalemate()) gameResult = "Draw — Stalemate";
-          else if (game.isInsufficientMaterial()) gameResult = "Draw — Insufficient material";
-          else if (game.isThreefoldRepetition()) gameResult = "Draw — Threefold repetition";
-          else gameResult = "Draw";
+            // Side to move is checkmated and loses.
+            const losingSide = game.turn(); // 'w' | 'b'
+            const winningSide = losingSide === "w" ? "b" : "w";
+            gameResult = winningSide === "w" ? "White wins by checkmate" : "Black wins by checkmate";
+            // Player is always white in this build.
+            winner = winningSide === "w" ? "player" : "ai";
+          } else if (game.isStalemate()) {
+            gameResult = "Draw — Stalemate";
+            winner = "draw";
+          } else if (game.isInsufficientMaterial()) {
+            gameResult = "Draw — Insufficient material";
+            winner = "draw";
+          } else if (game.isThreefoldRepetition()) {
+            gameResult = "Draw — Threefold repetition";
+            winner = "draw";
+          } else {
+            gameResult = "Draw";
+            winner = "draw";
+          }
         }
 
         if (!opts?.silent) {
           soundManager.move(isCapture);
           if (gameOver) setTimeout(() => soundManager.gameEnd(), 220);
         }
+
+        // Trigger confetti when a decisive winner emerges.
+        const confettiBump = winner === "player" || winner === "ai" ? prev.confetti + 1 : prev.confetti;
 
         return {
           ...prev,
@@ -208,8 +242,10 @@ export function useChessGame() {
           evalProb: evalToProbability(evalCp),
           gameOver,
           gameResult,
+          winner,
           moveCount: prev.moveCount + 1,
           pendingPromotion: null,
+          confetti: confettiBump,
         };
       });
 
@@ -305,6 +341,16 @@ export function useChessGame() {
       // Apply the AI move.
       applyMove(data.from, data.to, data.promotion);
 
+      // Derive the winner from the server's gameResult so the AI-move
+      // path also triggers confetti correctly.
+      let winner: "player" | "ai" | "draw" | null = null;
+      if (data.gameOver) {
+        const r = data.gameResult ?? "";
+        if (r.includes("Black wins")) winner = "ai"; // AI plays black
+        else if (r.includes("White wins")) winner = "player";
+        else winner = "draw";
+      }
+
       setState((prev) => ({
         ...prev,
         isAiThinking: false,
@@ -315,6 +361,9 @@ export function useChessGame() {
         heatmap: data.heatmap,
         gameOver: data.gameOver,
         gameResult: data.gameResult ?? prev.gameResult,
+        winner: winner ?? prev.winner,
+        confetti:
+          winner === "player" || winner === "ai" ? prev.confetti + 1 : prev.confetti,
       }));
 
       // In parallel, fetch an LLM narration.
@@ -366,6 +415,8 @@ export function useChessGame() {
     gameRef.current = g;
     const evalCp = evaluate(g);
     if (difficulty) difficultyRef.current = difficulty;
+    startedAtRef.current = Date.now();
+    savedRef.current = false;
     setState((prev) => ({
       pieces: buildInitialPieces(START_FEN),
       fen: g.fen(),
@@ -393,8 +444,96 @@ export function useChessGame() {
       moveCount: 0,
       playerColor: "w",
       aiColor: "b",
+      winner: null,
+      resigned: false,
+      saved: false,
+      confetti: prev.confetti,
     }));
   }, []);
+
+  const setPlayerName = useCallback((name: string) => {
+    playerNameRef.current = name;
+  }, []);
+
+  // Persist a finished game to the database (idempotent via savedRef).
+  const saveGame = useCallback(async (override?: { winner?: "player" | "ai" | "draw"; resultLabel?: string; resigned?: boolean }) => {
+    if (savedRef.current) return;
+    const g = gameRef.current;
+    const history = g.history();
+    if (history.length === 0 && !override?.resigned) return;
+    savedRef.current = true;
+
+    const winner = override?.winner ?? null;
+    const resultLabel = override?.resultLabel ?? "Game ended";
+    const resigned = override?.resigned ?? false;
+
+    let result: "player_win" | "ai_win" | "draw";
+    if (winner === "player") result = "player_win";
+    else if (winner === "ai") result = "ai_win";
+    else result = "draw";
+
+    const difficulty = difficultyRef.current;
+    const playerName = playerNameRef.current || "Player";
+    const durationSec = Math.max(0, Math.round((Date.now() - startedAtRef.current) / 1000));
+
+    try {
+      await fetch("/api/save-game", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          playerName,
+          playerColor: "w",
+          difficulty,
+          result,
+          winner: winner ?? "draw",
+          resultLabel,
+          moveCount: history.length,
+          durationSec,
+          moves: history.join(" "),
+          finalFen: g.fen(),
+          startedAt: startedAtRef.current,
+        }),
+      });
+      setState((prev) => ({ ...prev, saved: true }));
+    } catch (err) {
+      console.error("save-game failed", err);
+      savedRef.current = false; // allow retry
+    }
+  }, []);
+
+  // Resign: the player concedes, AI wins.
+  const resign = useCallback(() => {
+    if (state.gameOver || state.isAiThinking) return;
+    setState((prev) => ({
+      ...prev,
+      gameOver: true,
+      resigned: true,
+      winner: "ai",
+      gameResult: "Black wins by resignation",
+      confetti: prev.confetti + 1,
+      isAiThinking: false,
+      selected: null,
+      legalTargets: [],
+    }));
+    soundManager.gameEnd();
+    void saveGame({
+      winner: "ai",
+      resultLabel: "Black wins by resignation",
+      resigned: true,
+    });
+  }, [state.gameOver, state.isAiThinking, saveGame]);
+
+  // Auto-save whenever a game ends by natural causes (checkmate/draw), once.
+  useEffect(() => {
+    if (!state.gameOver) return;
+    if (state.saved) return;
+    if (state.resigned) return; // resign() saves directly
+    void saveGame({
+      winner: state.winner ?? "draw",
+      resultLabel: state.gameResult ?? "Game ended",
+      resigned: false,
+    });
+  }, [state.gameOver, state.saved, state.resigned, state.winner, state.gameResult, saveGame]);
 
   const undo = useCallback(() => {
     const game = gameRef.current;
@@ -431,7 +570,11 @@ export function useChessGame() {
       review: null,
       reviewIndex: -1,
       moveCount: game.history().length,
+      winner: null,
+      resigned: false,
+      saved: false,
     }));
+    savedRef.current = false;
   }, [state.isAiThinking]);
 
   const requestReview = useCallback(async () => {
@@ -474,6 +617,8 @@ export function useChessGame() {
     setShowHeatmap,
     newGame,
     undo,
+    resign,
+    setPlayerName,
     requestReview,
     setReviewIndex,
     closeReview,

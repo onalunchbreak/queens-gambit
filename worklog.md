@@ -55,3 +55,40 @@ Work Log:
 
 Stage Summary:
 - Harmon's Gambit is feature-complete and browser-verified. Ready for the user to preview.
+
+---
+Task ID: 3
+Agent: main
+Task: Add resign + confetti, game persistence, floating leaderboard.
+
+Work Log:
+- Schema: added GameSession model (playerName, playerColor, difficulty, result, winner, resultLabel, moveCount, durationSec, moves SAN, finalFen, startedAt, finishedAt) + indexes. Pushed to SQLite via `bun run db:push`.
+- APIs: /api/save-game (POST, validates + persists a finished game), /api/leaderboard (GET, aggregates top players by wins/fastest-win + recent games).
+- useChessGame hook: added winner/resigned/saved/confetti state, startedAtRef + playerNameRef + savedRef, resign() action (player concedes → AI wins → save), saveGame() (idempotent persist), auto-save effect on natural game end, winner derivation in both applyMove + requestAiMove paths, confetti trigger bump on decisive results.
+- Confetti.tsx: Framer Motion particle burst (120 player / 90 AI particles), color palette per winner (emerald/azure for player wins, rose/umber for AI wins), rule-clean (rAF + setTimeout for async setState).
+- Leaderboard.tsx: floating toggle button (bottom-right) with pulsing dot + game count badge; expands to animated panel with Top Players / Recent Games tabs; shows rank medals, wins, games, fastest-win time, avg moves/win, difficulty; recent games list with result, move count, duration, time-ago.
+- GameScreen.tsx: Resign button (rose outline) + confirmation dialog; player-name sync to hook ref; confetti + leaderboard mounted; game-over banner recolored by winner + "saved" status text.
+- Fixed: `Difficulty` type-only import in Leaderboard (chess.js-style isolation).
+- Verified: save-game returns {ok:true,id}, leaderboard returns aggregated data, DB count works.
+
+Stage Summary:
+- Resign flow + confetti + DB persistence + floating leaderboard all wired and API-verified. Ready for browser E2E.
+
+---
+Task ID: 4
+Agent: main
+Task: Browser E2E verification of resign + confetti + leaderboard + DB.
+
+Work Log:
+- Verified entry → game flow still works with new Resign + Leaderboard buttons present.
+- Resign flow: button → confirmation dialog ("Resign the game?") → confirm → game ends, banner "Black wins by resignation", "Saved to the leaderboard", AI-win confetti (64 rose/umber particles) fired.
+- DB: confirmed GameSession row created (playerName=Beth, winner=ai, resultLabel="Black wins by resignation", durationSec=19). moveCount=0 for resign is expected (no moves played).
+- Leaderboard panel: floating toggle button (bottom-right, pulsing dot, game-count badge) → expands to animated panel with Top Players + Recent Games tabs.
+  - Top Players: 🥇 medal, wins, games, fastest-win time, avg moves/win, top difficulty.
+  - Recent Games: result label, move count, duration, time-ago, colored result dot.
+- Injected a player_win record via API → leaderboard correctly aggregated (1W/1L, fastest win 95s) and showed "White wins by checkmate, 24 moves, 1:35".
+- Cleaned all test DB records so user starts fresh (0 games).
+- Lint clean, no console/runtime errors.
+
+Stage Summary:
+- Resign + confetti (both AI-win and player-win palettes) + Prisma/SQLite persistence + floating animated leaderboard all verified working end-to-end.
