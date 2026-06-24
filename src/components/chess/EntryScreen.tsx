@@ -7,21 +7,28 @@ import { Button } from "@/components/ui/button";
 import { DifficultySelector } from "./DifficultySelector";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Difficulty } from "@/lib/chess/types";
+import { PlayColor } from "./useChessGame";
+import { Shuffle } from "lucide-react";
 
 const FONT_STACK =
   '"Segoe UI Symbol", "Apple Symbols", "Noto Sans Symbols2", "Noto Sans Symbols", "DejaVu Sans", sans-serif';
 
 interface EntryScreenProps {
-  onStart: (name: string, difficulty: Difficulty) => void;
+  onStart: (name: string, difficulty: Difficulty, color: PlayColor) => void;
 }
+
+type ColorChoice = "w" | "b" | "random";
 
 export function EntryScreen({ onStart }: EntryScreenProps) {
   const [name, setName] = useState("");
   const [difficulty, setDifficulty] = useState<Difficulty>("club");
+  const [colorChoice, setColorChoice] = useState<ColorChoice>("w");
 
   const submit = () => {
     const trimmed = name.trim();
-    onStart(trimmed.length ? trimmed : "Player", difficulty);
+    const finalColor: PlayColor =
+      colorChoice === "random" ? (Math.random() < 0.5 ? "w" : "b") : colorChoice;
+    onStart(trimmed.length ? trimmed : "Player", difficulty, finalColor);
   };
 
   return (
@@ -57,12 +64,14 @@ export function EntryScreen({ onStart }: EntryScreenProps) {
             transition={{ delay: 0.15, duration: 0.6, ease: "easeOut" }}
             className="flex h-20 w-20 items-center justify-center rounded-full border-2 border-primary/40 bg-gradient-to-br from-card to-muted shadow-lg"
           >
+            {/* Use the primary token (luminous amber in dark, mahogany in light)
+                so the horse is always visible against the card background. */}
             <span
               style={{
                 fontFamily: FONT_STACK,
                 fontSize: 44,
-                color: "var(--piece-ivory-stroke)",
-                WebkitTextStroke: `1px var(--piece-ebony)`,
+                color: "var(--primary)",
+                WebkitTextStroke: `1px var(--primary)`,
                 lineHeight: 1,
               }}
             >
@@ -95,6 +104,13 @@ export function EntryScreen({ onStart }: EntryScreenProps) {
 
           <div className="mt-5">
             <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Choose your color
+            </label>
+            <ColorSelector value={colorChoice} onChange={setColorChoice} />
+          </div>
+
+          <div className="mt-5">
+            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Choose your opponent
             </label>
             <DifficultySelector value={difficulty} onChange={setDifficulty} />
@@ -109,13 +125,78 @@ export function EntryScreen({ onStart }: EntryScreenProps) {
         </div>
 
         <p className="mt-4 text-center text-[11px] text-muted-foreground">
-          You play White against the Harmon engine.
+          {colorChoice === "w"
+            ? "You play White against the Harmon engine."
+            : colorChoice === "b"
+              ? "You play Black — Harmon opens the game."
+              : "Your color will be drawn at random."}
         </p>
       </motion.div>
 
       <footer className="mt-auto py-3 text-center text-[11px] text-muted-foreground">
         Harmon&apos;s Gambit &mdash; AlphaZero meets the World Chess Championship.
       </footer>
+    </div>
+  );
+}
+
+function ColorSelector({
+  value,
+  onChange,
+}: {
+  value: ColorChoice;
+  onChange: (c: ColorChoice) => void;
+}) {
+  const options: { id: ColorChoice; label: string; glyph: string; sub: string }[] = [
+    { id: "w", label: "White", glyph: "\u265F", sub: "Move first" },
+    { id: "b", label: "Black", glyph: "\u265F", sub: "Respond" },
+    { id: "random", label: "Random", glyph: "\u265F", sub: "Toss the coin" },
+  ];
+
+  return (
+    <div className="grid grid-cols-3 gap-2">
+      {options.map((o) => {
+        const active = value === o.id;
+        const isRandom = o.id === "random";
+        // For the glyph, show white piece for White, black piece for Black, dice-ish for random.
+        return (
+          <motion.button
+            key={o.id}
+            type="button"
+            onClick={() => onChange(o.id)}
+            whileHover={{ y: -2 }}
+            whileTap={{ scale: 0.97 }}
+            className={
+              "relative flex flex-col items-center gap-1 rounded-lg border bg-card/80 px-2 py-2.5 text-center transition-all " +
+              (active
+                ? "border-primary shadow-sm ring-1 ring-primary/40"
+                : "border-border opacity-65 hover:opacity-100 hover:border-muted-foreground/40")
+            }
+            aria-pressed={active}
+          >
+            <span
+              className="flex h-7 w-7 items-center justify-center"
+              style={{ fontFamily: FONT_STACK, fontSize: 22, lineHeight: 1 }}
+            >
+              {isRandom ? (
+                <Shuffle className="h-4 w-4 text-primary" />
+              ) : o.id === "w" ? (
+                <span style={{ color: "var(--piece-ivory)", WebkitTextStroke: "1px var(--piece-ivory-stroke)" }}>
+                  {o.glyph}
+                </span>
+              ) : (
+                <span style={{ color: "var(--piece-ebony)", WebkitTextStroke: "0.5px var(--piece-ebony-stroke)" }}>
+                  {o.glyph}
+                </span>
+              )}
+            </span>
+            <span className="text-[12.5px] font-semibold leading-tight text-card-foreground">
+              {o.label}
+            </span>
+            <span className="text-[10px] text-muted-foreground">{o.sub}</span>
+          </motion.button>
+        );
+      })}
     </div>
   );
 }

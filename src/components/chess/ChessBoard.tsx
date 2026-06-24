@@ -8,10 +8,11 @@ import { AnnotationKind } from "@/lib/chess/types";
 
 const FILES = "abcdefgh";
 
-function squareToGrid(sq: string): { c: number; r: number } {
+function squareToGrid(sq: string, flipped: boolean): { c: number; r: number } {
   const c = sq.charCodeAt(0) - 97;
   const r = 8 - parseInt(sq[1], 10);
-  return { c, r };
+  if (!flipped) return { c, r };
+  return { c: 7 - c, r: 7 - r };
 }
 
 interface BoardProps {
@@ -32,6 +33,7 @@ interface BoardProps {
   reviewArrow?: { from: string; to: string; kind: AnnotationKind } | null;
   interactive?: boolean;
   animateMoves?: boolean;
+  orientation?: "w" | "b"; // which side sits at the bottom (player's color)
 }
 
 export function ChessBoard({
@@ -51,7 +53,9 @@ export function ChessBoard({
   reviewArrow,
   interactive = true,
   animateMoves = true,
+  orientation = "w",
 }: BoardProps) {
+  const flipped = orientation === "b";
   // Build a map of square -> piece for rendering.
   const pieceMap = useMemo(() => {
     const m = new Map<string, PieceInstance>();
@@ -98,7 +102,10 @@ export function ChessBoard({
             const r = Math.floor(i / 8);
             const c = i % 8;
             const isLight = (r + c) % 2 === 0;
-            const square = `${FILES[c]}${8 - r}`;
+            // Map grid cell to actual chess square, accounting for orientation.
+            const fileIdx = flipped ? 7 - c : c;
+            const rankIdx = flipped ? r + 1 : 8 - r;
+            const square = `${FILES[fileIdx]}${rankIdx}`;
             const isLastMove =
               lastMove && (square === lastMove.from || square === lastMove.to);
             const isSelected = selected === square;
@@ -163,7 +170,7 @@ export function ChessBoard({
                       opacity: 0.85,
                     }}
                   >
-                    {FILES[c]}
+                    {FILES[fileIdx]}
                   </span>
                 )}
                 {c === 0 && (
@@ -174,7 +181,7 @@ export function ChessBoard({
                       opacity: 0.85,
                     }}
                   >
-                    {8 - r}
+                    {rankIdx}
                   </span>
                 )}
                 {/* legal move dot / ghost capture ring */}
@@ -244,7 +251,7 @@ export function ChessBoard({
         {/* Pieces layer (absolutely positioned, animated) */}
         <div className="absolute inset-0 pointer-events-none">
           {pieces.map((p) => {
-            const { c, r } = squareToGrid(p.square);
+            const { c, r } = squareToGrid(p.square, flipped);
             const isMover = animateMoves && moverId === p.id;
             return (
               <motion.div
@@ -288,8 +295,8 @@ export function ChessBoard({
               </marker>
             </defs>
             {(() => {
-              const from = squareToGrid(reviewArrow.from);
-              const to = squareToGrid(reviewArrow.to);
+              const from = squareToGrid(reviewArrow.from, flipped);
+              const to = squareToGrid(reviewArrow.to, flipped);
               const x1 = from.c + 0.5;
               const y1 = from.r + 0.5;
               const x2 = to.c + 0.5;

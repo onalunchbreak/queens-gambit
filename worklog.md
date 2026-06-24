@@ -112,3 +112,36 @@ Work Log:
 
 Stage Summary:
 - Moves overflow fixed (scrollable container). Difficulty selector redesigned (elegant pips, no garish colors). Robust dark mode implemented across the entire app with smooth transitions and theme-aware CSS variables.
+
+---
+Task ID: 6
+Agent: main
+Task: Color selection, captured-pieces 3D fly-off, dark-mode logo fix.
+
+Work Log:
+- Fixed dark-mode logo: the horse crest in EntryScreen + GameScreen header used `--piece-ivory-stroke` (dark color) which was invisible on dark backgrounds. Switched to `var(--primary)` (luminous amber in dark, mahogany in light) so the knight is always visible. VLM-confirmed.
+- Color selection: added ColorSelector to EntryScreen with 3 options (White / Black / Random). Random draws at submit time. Entry screen subtitle updates dynamically. page.tsx passes `color` through to GameScreen.
+- useChessGame refactor for arbitrary player color:
+  - Added `playerColor`/`aiColor` to state + `playerColorRef`.
+  - `setPlayerColor()`, `newGame({playerColor})`, `setPlayerName` all use refs.
+  - `selectSquare` now checks `game.turn() === prev.playerColor` and selects `prev.playerColor` pieces (not hardcoded 'w').
+  - Promotion rank check uses `prev.playerColor === 'w' ? '8' : '1'`.
+  - `requestAiMove` computes `aiColor` from the ref; winner derivation is color-agnostic ("White wins" → ai wins if aiColor==='w').
+  - AI-trigger effect fires when `state.turn === state.aiColor`.
+  - `resign` uses dynamic "White/Black wins by resignation" based on aiColor.
+  - `saveGame` persists the actual `playerColor`.
+  - `undo` rewinds to player's turn correctly for either color.
+- Board orientation: ChessBoard accepts `orientation` prop ('w'|'b'); `squareToGrid` + coordinate labels respect `flipped` so the board rotates 180° when player is Black. Verified: first square = h1 when playing Black.
+- Captured-pieces system:
+  - `CapturedPiece` type (id, type, color, capturedBy, fromSquare, nonce) added to GameState.
+  - `applyMove` detects captures (incl. en passant), records the victim piece with its origin square BEFORE removal, appends to `state.captured`, and sets `state.lastCapture` + bumps `captureNonce`.
+  - `CapturedTray` component: two trays ("You captured" / "AI captured") above the board, showing captured piece glyphs with spring entrance animation (rotateY, scale, slide-in) and a material-balance "+N" badge. Verified: "AI captured ♝ +3" after the AI took my bishop.
+  - `CaptureFlyOff` overlay: renders the just-captured piece at its origin square, then animates it flying off-board (translate + rotateZ + rotateY 360° + fade) toward the capturing side's tray edge. VLM-confirmed a bishop flying off mid-animation.
+  - Board wrapper uses a ResizeObserver to feed accurate boardRect to the fly-off overlay for precise positioning.
+- EvalBar + side-panel text made color-aware ("You"/"Harmon AI" labels swap based on playerColor; idle text says "Harmon opens with White" when player is Black).
+- Fixed init-effect infinite loop (game object in deps caused re-render loop → client crash) via a `didInitRef` mount guard.
+- VLM-verified: dark logo visible, captures trays readable in dark mode, fly-off animation visible mid-flight, Random produces both colors across attempts.
+- Lint clean, no console/runtime errors.
+
+Stage Summary:
+- Players can now choose White, Black, or Random. Board flips for Black, AI opens when player is Black. Captures are tracked with a 3D animated fly-off to side trays showing material balance. Dark-mode logo fixed. All verified end-to-end.

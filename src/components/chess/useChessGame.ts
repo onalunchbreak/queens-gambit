@@ -13,11 +13,23 @@ import {
 import { computeHeatmap, evaluate, evalLabel, evalToProbability } from "@/lib/chess/evaluation";
 import { soundManager } from "./sounds";
 
+export type PlayColor = "w" | "b";
+
 export interface PieceInstance {
   id: string;
   type: "p" | "n" | "b" | "r" | "q" | "k";
   color: "w" | "b";
   square: string; // e.g. "e4"
+}
+
+export interface CapturedPiece {
+  id: string; // unique per capture event
+  type: "p" | "n" | "b" | "r" | "q" | "k";
+  color: "w" | "b"; // the color of the piece that was captured
+  capturedBy: "w" | "b"; // the color that captured it
+  // origin square where the piece sat before being captured (for fly-off animation)
+  fromSquare: string;
+  nonce: number; // increments to retrigger animation
 }
 
 export interface LastMove {
@@ -26,6 +38,7 @@ export interface LastMove {
 }
 
 let PIECE_ID_COUNTER = 1;
+let CAPTURE_ID_COUNTER = 1;
 
 function buildInitialPieces(fen: string): PieceInstance[] {
   const game = new Chess(fen);
@@ -73,16 +86,17 @@ export interface GameState {
   reviewLoading: boolean;
   reviewIndex: number; // current ply viewed in review (-1 = live)
   moveCount: number;
-  playerColor: "w";
-  aiColor: "b";
-  // Who won this game once it ends: "player" | "ai" | "draw" | null
+  playerColor: PlayColor;
+  aiColor: PlayColor;
   winner: "player" | "ai" | "draw" | null;
-  // Whether the game ended because the player resigned.
   resigned: boolean;
-  // Whether the current finished game has been persisted to the database.
   saved: boolean;
-  // Confetti trigger: increments each time a win-event should fire confetti.
   confetti: number;
+  // Captured pieces (cumulative this game) — used by the side trays.
+  captured: CapturedPiece[];
+  // Most recent capture (for triggering fly-off animation) — nonce-based.
+  lastCapture: CapturedPiece | null;
+  captureNonce: number;
 }
 
 const START_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
@@ -90,6 +104,7 @@ const START_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 export function useChessGame() {
   const gameRef = useRef<Chess>(new Chess(START_FEN));
   const difficultyRef = useRef<Difficulty>("club");
+  const playerColorRef = useRef<PlayColor>("w");
   const startedAtRef = useRef<number>(Date.now());
   const playerNameRef = useRef<string>("Player");
   const savedRef = useRef<boolean>(false); // guards against double-saves
@@ -128,6 +143,9 @@ export function useChessGame() {
       resigned: false,
       saved: false,
       confetti: 0,
+      captured: [],
+      lastCapture: null,
+      captureNonce: 0,
     };
   });
 
@@ -148,13 +166,35 @@ export function useChessGame() {
         const isCapture = !!moveResult.captured;
         const isCastle = moveResult.flags.includes("k") || moveResult.flags.includes("q");
 
+        // The moving piece's color is moveResult.color.
+        const moverColor = moveResult.color;
+
+        // Track the captured piece for the fly-off animation BEFORE removing it.
+        let capturedPiece: CapturedPiece | null = null;
+        if (isCapture) {
+          let capSquare = to;
+          if (moveResult.flags.includes("e")) {
+            // en passant — captured pawn sits behind `to`
+            capSquare = `${to[0]}${moverColor === "w" ? "5" : "4"}`;
+          }
+          const victim = pieces.find((p) => p.square === capSquare && p.color !== moverColor);
+          if (victim) {
+            capturedPiece = {
+              id: `c${CAPTURE_ID_COUNTER++}`,
+              type: victim.type,
+              color: victim.color,
+              capturedBy: moverColor,
+              fromSquare: capSquare,
+              nonce: prev.captureNonce + 1,
+            };
+          }
+        }
+
         // Move the primary piece.
         pieces = pieces.map((p) => (p.square === from ? { ...p, square: to } : p));
 
-        // Remove captured piece. The mover is now on `to`; remove the enemy piece
-        // that was there. For en passant the captured pawn sits behind `to`.
+        // Remove captured piece.
         if (isCapture) {
-          const moverColor = prev.turn;
           if (moveResult.flags.includes("e")) {
             const capRank = moverColor === "w" ? "5" : "4";
             const capSquare = `${to[0]}${capRank}`;
@@ -175,14 +215,12 @@ export function useChessGame() {
 
         // Castling: move the rook too.
         if (isCastle) {
-          const rank = moveResult.color === "w" ? "1" : "8";
+          const rank = moverColor === "w" ? "1" : "8";
           if (moveResult.flags.includes("k")) {
-            // kingside: rook h->f
             pieces = pieces.map((p) =>
               p.square === `h${rank}` ? { ...p, square: `f${rank}` } : p,
             );
           } else {
-            // queenside: rook a->d
             pieces = pieces.map((p) =>
               p.square === `a${rank}` ? { ...p, square: `d${rank}` } : p,
             );
@@ -198,12 +236,10 @@ export function useChessGame() {
         let winner: "player" | "ai" | "draw" | null = null;
         if (gameOver) {
           if (game.isCheckmate()) {
-            // Side to move is checkmated and loses.
-            const losingSide = game.turn(); // 'w' | 'b'
+            const losingSide = game.turn();
             const winningSide = losingSide === "w" ? "b" : "w";
             gameResult = winningSide === "w" ? "White wins by checkmate" : "Black wins by checkmate";
-            // Player is always white in this build.
-            winner = winningSide === "w" ? "player" : "ai";
+            winner = winningSide === prev.playerColor ? "player" : "ai";
           } else if (game.isStalemate()) {
             gameResult = "Draw — Stalemate";
             winner = "draw";
@@ -224,7 +260,6 @@ export function useChessGame() {
           if (gameOver) setTimeout(() => soundManager.gameEnd(), 220);
         }
 
-        // Trigger confetti when a decisive winner emerges.
         const confettiBump = winner === "player" || winner === "ai" ? prev.confetti + 1 : prev.confetti;
 
         return {
@@ -246,6 +281,9 @@ export function useChessGame() {
           moveCount: prev.moveCount + 1,
           pendingPromotion: null,
           confetti: confettiBump,
+          captured: capturedPiece ? [...prev.captured, capturedPiece] : prev.captured,
+          lastCapture: capturedPiece,
+          captureNonce: capturedPiece ? prev.captureNonce + 1 : prev.captureNonce,
         };
       });
 
@@ -258,25 +296,25 @@ export function useChessGame() {
     const game = gameRef.current;
     setState((prev) => {
       if (prev.isAiThinking || prev.gameOver) return prev;
-      // Only allow selecting own pieces (white) on player's turn.
-      if (game.turn() !== "w") return prev;
+      // Only allow selecting the player's own pieces on the player's turn.
+      if (game.turn() !== prev.playerColor) return prev;
 
       const piece = game.get(sq as Square);
       // If clicking a legal target of the currently selected piece -> move.
       if (prev.selected && prev.legalTargets.some((t) => t.square === sq)) {
         const from = prev.selected;
-        // promotion check
+        // promotion check: pawn reaching the last rank of the mover's direction
         const mover = game.get(from as Square);
-        if (mover && mover.type === "p" && (sq[1] === "8" || sq[1] === "1")) {
+        const lastRank = prev.playerColor === "w" ? "8" : "1";
+        if (mover && mover.type === "p" && sq[1] === lastRank) {
           return { ...prev, pendingPromotion: { from, to: sq }, selected: null, legalTargets: [] };
         }
-        // perform move via external applyMove (can't call inside setState updater reliably)
         queueMicrotask(() => applyMove(from, sq));
         return { ...prev, selected: null, legalTargets: [] };
       }
 
-      // Selecting a white piece.
-      if (piece && piece.color === "w") {
+      // Selecting the player's own piece.
+      if (piece && piece.color === prev.playerColor) {
         const moves = game.moves({ square: sq as Square, verbose: true }) as {
           to: string;
           captured?: string;
@@ -305,6 +343,11 @@ export function useChessGame() {
     setState((prev) => ({ ...prev, difficulty: d }));
   }, []);
 
+  const setPlayerColor = useCallback((c: PlayColor) => {
+    playerColorRef.current = c;
+    setState((prev) => ({ ...prev, playerColor: c, aiColor: c === "w" ? "b" : "w" }));
+  }, []);
+
   const toggleHeatmap = useCallback(() => {
     setState((prev) => ({ ...prev, showHeatmap: !prev.showHeatmap }));
   }, []);
@@ -318,8 +361,8 @@ export function useChessGame() {
     setState((prev) => ({ ...prev, isAiThinking: true, narration: "", narrationLoading: false }));
     const fen = gameRef.current.fen();
     const difficulty: Difficulty = difficultyRef.current;
+    const aiColor: PlayColor = playerColorRef.current === "w" ? "b" : "w";
 
-    // Minimum thinking time so the "Thinking…" animation is always visible.
     const minThinkMs = difficulty === "master" ? 950 : difficulty === "club" ? 650 : 550;
     const thinkStart = Date.now();
 
@@ -332,22 +375,19 @@ export function useChessGame() {
       const data: AiMoveResult = await res.json();
       if (data.error) throw new Error(data.error);
 
-      // Hold the thinking animation for at least minThinkMs before revealing the move.
       const elapsed = Date.now() - thinkStart;
       if (elapsed < minThinkMs) {
         await new Promise((r) => setTimeout(r, minThinkMs - elapsed));
       }
 
-      // Apply the AI move.
       applyMove(data.from, data.to, data.promotion);
 
-      // Derive the winner from the server's gameResult so the AI-move
-      // path also triggers confetti correctly.
+      // Derive winner from the server's gameResult (color-agnostic).
       let winner: "player" | "ai" | "draw" | null = null;
       if (data.gameOver) {
         const r = data.gameResult ?? "";
-        if (r.includes("Black wins")) winner = "ai"; // AI plays black
-        else if (r.includes("White wins")) winner = "player";
+        if (r.includes("White wins")) winner = aiColor === "w" ? "ai" : "player";
+        else if (r.includes("Black wins")) winner = aiColor === "b" ? "ai" : "player";
         else winner = "draw";
       }
 
@@ -366,7 +406,7 @@ export function useChessGame() {
           winner === "player" || winner === "ai" ? prev.confetti + 1 : prev.confetti,
       }));
 
-      // In parallel, fetch an LLM narration.
+      // LLM narration.
       setState((prev) => ({ ...prev, narrationLoading: true }));
       try {
         const nres = await fetch("/api/narrate", {
@@ -377,7 +417,7 @@ export function useChessGame() {
             san: data.san,
             from: data.from,
             to: data.to,
-            mover: "b",
+            mover: aiColor,
             difficulty,
             heuristicShort: data.explanation.short,
             heuristicDetail: data.explanation.detail,
@@ -398,23 +438,25 @@ export function useChessGame() {
     }
   }, [applyMove]);
 
-  // Trigger AI move whenever it becomes black's turn and game not over.
+  // Trigger AI move whenever it becomes the AI's turn and game not over.
   useEffect(() => {
     if (state.gameOver) return;
     if (state.isAiThinking) return;
-    if (state.turn === "b" && !state.pendingPromotion) {
+    if (state.turn === state.aiColor && !state.pendingPromotion) {
       const t = setTimeout(() => {
         void requestAiMove();
       }, 350);
       return () => clearTimeout(t);
     }
-  }, [state.turn, state.gameOver, state.isAiThinking, state.pendingPromotion, requestAiMove]);
+  }, [state.turn, state.aiColor, state.gameOver, state.isAiThinking, state.pendingPromotion, requestAiMove]);
 
-  const newGame = useCallback((difficulty?: Difficulty) => {
+  const newGame = useCallback((opts?: { difficulty?: Difficulty; playerColor?: PlayColor }) => {
     const g = new Chess(START_FEN);
     gameRef.current = g;
     const evalCp = evaluate(g);
-    if (difficulty) difficultyRef.current = difficulty;
+    if (opts?.difficulty) difficultyRef.current = opts.difficulty;
+    const color: PlayColor = opts?.playerColor ?? playerColorRef.current;
+    playerColorRef.current = color;
     startedAtRef.current = Date.now();
     savedRef.current = false;
     setState((prev) => ({
@@ -436,18 +478,21 @@ export function useChessGame() {
       evalProb: evalToProbability(evalCp),
       gameOver: false,
       gameResult: null,
-      difficulty: difficulty ?? prev.difficulty,
+      difficulty: opts?.difficulty ?? prev.difficulty,
       pendingPromotion: null,
       review: null,
       reviewLoading: false,
       reviewIndex: -1,
       moveCount: 0,
-      playerColor: "w",
-      aiColor: "b",
+      playerColor: color,
+      aiColor: color === "w" ? "b" : "w",
       winner: null,
       resigned: false,
       saved: false,
       confetti: prev.confetti,
+      captured: [],
+      lastCapture: null,
+      captureNonce: 0,
     }));
   }, []);
 
@@ -474,6 +519,7 @@ export function useChessGame() {
 
     const difficulty = difficultyRef.current;
     const playerName = playerNameRef.current || "Player";
+    const playerColor = playerColorRef.current;
     const durationSec = Math.max(0, Math.round((Date.now() - startedAtRef.current) / 1000));
 
     try {
@@ -482,7 +528,7 @@ export function useChessGame() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           playerName,
-          playerColor: "w",
+          playerColor,
           difficulty,
           result,
           winner: winner ?? "draw",
@@ -497,37 +543,35 @@ export function useChessGame() {
       setState((prev) => ({ ...prev, saved: true }));
     } catch (err) {
       console.error("save-game failed", err);
-      savedRef.current = false; // allow retry
+      savedRef.current = false;
     }
   }, []);
 
   // Resign: the player concedes, AI wins.
   const resign = useCallback(() => {
     if (state.gameOver || state.isAiThinking) return;
+    const aiColorLabel = state.aiColor === "w" ? "White" : "Black";
+    const resultLabel = `${aiColorLabel} wins by resignation`;
     setState((prev) => ({
       ...prev,
       gameOver: true,
       resigned: true,
       winner: "ai",
-      gameResult: "Black wins by resignation",
+      gameResult: resultLabel,
       confetti: prev.confetti + 1,
       isAiThinking: false,
       selected: null,
       legalTargets: [],
     }));
     soundManager.gameEnd();
-    void saveGame({
-      winner: "ai",
-      resultLabel: "Black wins by resignation",
-      resigned: true,
-    });
-  }, [state.gameOver, state.isAiThinking, saveGame]);
+    void saveGame({ winner: "ai", resultLabel, resigned: true });
+  }, [state.gameOver, state.isAiThinking, state.aiColor, saveGame]);
 
   // Auto-save whenever a game ends by natural causes (checkmate/draw), once.
   useEffect(() => {
     if (!state.gameOver) return;
     if (state.saved) return;
-    if (state.resigned) return; // resign() saves directly
+    if (state.resigned) return;
     void saveGame({
       winner: state.winner ?? "draw",
       resultLabel: state.gameResult ?? "Game ended",
@@ -537,19 +581,40 @@ export function useChessGame() {
 
   const undo = useCallback(() => {
     const game = gameRef.current;
-    // undo AI move + player move (if both exist)
     if (state.isAiThinking) return;
     if (game.history().length === 0) return;
+    // Undo back to the player's turn: undo AI move + player move if applicable.
     game.undo();
-    if (game.history().length > 0 && game.turn() === "b") {
-      // we just undid the player's move; now it's black's turn meaning AI hadn't moved? 
-      // Actually after undoing player move, turn becomes 'b' (AI to move) — undo that too if it was AI's.
-    }
-    if (game.history().length > 0) {
+    if (game.history().length > 0 && game.turn() !== state.playerColor) {
       game.undo();
     }
-    // rebuild pieces from FEN (simpler than reverse-applying)
     const evalCp = evaluate(game);
+    // Rebuild captured list from history (re-simulate).
+    const replay = new Chess(START_FEN);
+    const recaptured: CapturedPiece[] = [];
+    for (const san of game.history()) {
+      const before = replay.fen();
+      const mv = replay.move(san);
+      if (!mv) break;
+      if (mv.captured) {
+        // find origin square of captured piece (from the `before` position)
+        const beforeGame = new Chess(before);
+        const board = beforeGame.board();
+        // captured piece was on mv.to (or en-passant square)
+        let capSquare: string = mv.to;
+        if (mv.flags.includes("e")) {
+          capSquare = `${mv.to[0]}${mv.color === "w" ? "5" : "4"}`;
+        }
+        recaptured.push({
+          id: `c${CAPTURE_ID_COUNTER++}`,
+          type: mv.captured as CapturedPiece["type"],
+          color: mv.color === "w" ? "b" : "w",
+          capturedBy: mv.color as "w" | "b",
+          fromSquare: capSquare,
+          nonce: recaptured.length + 1,
+        });
+      }
+    }
     setState((prev) => ({
       ...prev,
       pieces: buildInitialPieces(game.fen()),
@@ -573,9 +638,12 @@ export function useChessGame() {
       winner: null,
       resigned: false,
       saved: false,
+      captured: recaptured,
+      lastCapture: null,
+      captureNonce: recaptured.length,
     }));
     savedRef.current = false;
-  }, [state.isAiThinking]);
+  }, [state.isAiThinking, state.playerColor]);
 
   const requestReview = useCallback(async () => {
     const sans = gameRef.current.history();
@@ -613,6 +681,7 @@ export function useChessGame() {
     selectSquare,
     choosePromotion,
     setDifficulty,
+    setPlayerColor,
     toggleHeatmap,
     setShowHeatmap,
     newGame,

@@ -8,9 +8,11 @@ interface EvalBarProps {
   evalCp: number;
   label: string;
   gameOver: boolean;
+  /** Which color the human player controls — drives the side labels. */
+  playerColor?: "w" | "b";
 }
 
-export function EvalBar({ prob, evalCp, label, gameOver }: EvalBarProps) {
+export function EvalBar({ prob, evalCp, label, gameOver, playerColor = "w" }: EvalBarProps) {
   const whitePct = Math.max(0.02, Math.min(0.98, prob)) * 100;
 
   // Format the eval number for display.
@@ -51,11 +53,16 @@ export function EvalBar({ prob, evalCp, label, gameOver }: EvalBarProps) {
         </div>
       </div>
       <div className="flex flex-col justify-between py-1 text-xs">
+        {/* Top label is always the side at the top of the eval bar (Black fills from bottom,
+            so the top of the visual bar = White when White is winning). We label the two
+            ends by color + who plays them. */}
         <div>
           <div className="font-semibold text-[11px] uppercase tracking-wider text-amber-700/80 dark:text-amber-400/80">
             Black
           </div>
-          <div className="text-[11px] text-muted-foreground">Harmon AI</div>
+          <div className="text-[11px] text-muted-foreground">
+            {playerColor === "b" ? (gameOver ? "Done" : "You") : "Harmon AI"}
+          </div>
         </div>
         <div className="text-center">
           <div className="font-medium text-[11px] leading-tight text-foreground/80">{label}</div>
@@ -65,7 +72,7 @@ export function EvalBar({ prob, evalCp, label, gameOver }: EvalBarProps) {
             White
           </div>
           <div className="text-[11px] text-muted-foreground">
-            {gameOver ? "Done" : "You"}
+            {playerColor === "w" ? (gameOver ? "Done" : "You") : "Harmon AI"}
           </div>
         </div>
       </div>

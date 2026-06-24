@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Chess } from "chess.js";
 import { Button } from "@/components/ui/button";
@@ -25,8 +25,9 @@ import { ThinkingIndicator } from "./ThinkingIndicator";
 import { GameReview } from "./GameReview";
 import { Confetti } from "./Confetti";
 import { Leaderboard } from "./Leaderboard";
+import { CapturedTray, CaptureFlyOff } from "./CapturedTray";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { useChessGame, START_FEN } from "./useChessGame";
+import { useChessGame, START_FEN, PlayColor } from "./useChessGame";
 import { reviewPosition } from "./review-util";
 import { soundManager } from "./sounds";
 import { Difficulty } from "@/lib/chess/types";
@@ -34,6 +35,7 @@ import { Difficulty } from "@/lib/chess/types";
 interface GameScreenProps {
   playerName: string;
   initialDifficulty: Difficulty;
+  initialColor: PlayColor;
   onExit: () => void;
 }
 
@@ -47,21 +49,47 @@ const PROMO_PIECES: { kind: "q" | "r" | "b" | "n"; glyph: string }[] = [
   { kind: "n", glyph: "\u265E" },
 ];
 
-export function GameScreen({ playerName, initialDifficulty, onExit }: GameScreenProps) {
+export function GameScreen({ playerName, initialDifficulty, initialColor, onExit }: GameScreenProps) {
   const game = useChessGame();
   const { state } = game;
   const [soundOn, setSoundOn] = useState(true);
   const [confirmResign, setConfirmResign] = useState(false);
+  const boardWrapRef = useRef<HTMLDivElement | null>(null);
+  const [boardRect, setBoardRect] = useState<{ width: number; height: number } | null>(null);
 
-  // Initialize difficulty from entry screen (once).
+  // Initialize difficulty + color from entry screen (once, on mount).
+  // We intentionally run this only once — `game` is a stable hook return but
+  // its methods are recreated each render, so we use a mount guard.
+  const didInitRef = useRef(false);
   useEffect(() => {
+    if (didInitRef.current) return;
+    didInitRef.current = true;
     game.setDifficulty(initialDifficulty);
-  }, [initialDifficulty]);
+    game.setPlayerColor(initialColor);
+    // If the player is Black, the AI (White) must open the game.
+    if (initialColor === "b") {
+      game.newGame({ playerColor: "b" });
+    }
+  }, []);
 
   // Keep the player name in the hook's ref (for DB persistence on game end).
   useEffect(() => {
     game.setPlayerName(playerName);
   }, [playerName, game]);
+
+  // Track board size for the fly-off overlay positioning.
+  useEffect(() => {
+    const el = boardWrapRef.current;
+    if (!el) return;
+    const update = () => {
+      const r = el.getBoundingClientRect();
+      setBoardRect({ width: r.width, height: r.height });
+    };
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
 
   // Sync sound manager with toggle.
   useEffect(() => {
@@ -119,7 +147,7 @@ export function GameScreen({ playerName, initialDifficulty, onExit }: GameScreen
           <div className="flex items-center gap-3 min-w-0">
             <span
               className="hidden sm:flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-primary/40 bg-gradient-to-br from-card to-muted"
-              style={{ fontFamily: FONT_STACK, fontSize: 20, color: "var(--piece-ivory-stroke)", lineHeight: 1 }}
+              style={{ fontFamily: FONT_STACK, fontSize: 20, color: "var(--primary)", lineHeight: 1 }}
             >
               {"\u265E"}
             </span>
@@ -157,24 +185,52 @@ export function GameScreen({ playerName, initialDifficulty, onExit }: GameScreen
         {/* Board column */}
         <div className="flex flex-col items-center gap-3 lg:flex-1">
           <div className="w-full max-w-[560px]">
-            <ChessBoard
-              pieces={boardPieces}
-              lastMove={boardLastMove}
-              selected={state.selected}
-              legalTargets={state.legalTargets}
-              heatmap={state.heatmap}
-              showHeatmap={state.showHeatmap}
-              turn={state.turn}
-              inCheck={reviewActive ? false : liveCheck.inCheck}
-              checkSquare={reviewActive ? null : liveCheck.checkSquare}
-              onSquareClick={game.selectSquare}
-              moveNonce={state.moveCount}
-              reviewActive={reviewActive}
-              reviewMarker={reviewActive && reviewPos?.marker ? reviewPos.marker : null}
-              reviewArrow={reviewActive && reviewPos?.arrow ? reviewPos.arrow : null}
-              interactive={boardInteractive}
-              animateMoves={!reviewActive}
-            />
+            {/* Top tray: pieces captured BY the player at the bottom (i.e. AI's color). */}
+            <div className="mb-2 flex justify-between gap-2">
+              <CapturedTray
+                capturedBy={state.playerColor}
+                captured={state.captured}
+                label={state.playerColor === "w" ? "You captured" : "You captured"}
+                align="left"
+              />
+              <CapturedTray
+                capturedBy={state.aiColor}
+                captured={state.captured}
+                label="AI captured"
+                align="right"
+              />
+            </div>
+
+            {/* Board + fly-off overlay wrapper */}
+            <div ref={boardWrapRef} className="relative">
+              <ChessBoard
+                pieces={boardPieces}
+                lastMove={boardLastMove}
+                selected={state.selected}
+                legalTargets={state.legalTargets}
+                heatmap={state.heatmap}
+                showHeatmap={state.showHeatmap}
+                turn={state.turn}
+                inCheck={reviewActive ? false : liveCheck.inCheck}
+                checkSquare={reviewActive ? null : liveCheck.checkSquare}
+                onSquareClick={game.selectSquare}
+                moveNonce={state.moveCount}
+                reviewActive={reviewActive}
+                reviewMarker={reviewActive && reviewPos?.marker ? reviewPos.marker : null}
+                reviewArrow={reviewActive && reviewPos?.arrow ? reviewPos.arrow : null}
+                interactive={boardInteractive}
+                animateMoves={!reviewActive}
+                orientation={state.playerColor}
+              />
+              {/* Fly-off overlay: the captured piece animates off the board */}
+              {!reviewActive && (
+                <CaptureFlyOff
+                  capture={state.lastCapture}
+                  boardRect={boardRect}
+                  orientation={state.playerColor}
+                />
+              )}
+            </div>
           </div>
 
           {/* below-board controls (mobile shows these too) */}
@@ -183,7 +239,7 @@ export function GameScreen({ playerName, initialDifficulty, onExit }: GameScreen
               variant="outline"
               size="sm"
               className="h-8"
-              onClick={() => game.newGame()}
+              onClick={() => game.newGame({ playerColor: state.playerColor })}
               disabled={state.isAiThinking}
             >
               <RotateCcw className="h-3.5 w-3.5 mr-1" /> New Game
@@ -229,6 +285,7 @@ export function GameScreen({ playerName, initialDifficulty, onExit }: GameScreen
                 evalCp={state.evaluation}
                 label={state.evalLabel}
                 gameOver={state.gameOver}
+                playerColor={state.playerColor}
               />
               <div className="flex-1">
                 <div className="flex items-center justify-between">
@@ -308,7 +365,9 @@ export function GameScreen({ playerName, initialDifficulty, onExit }: GameScreen
                   className="py-3 text-center text-xs text-muted-foreground"
                 >
                   <Crown className="mx-auto mb-1 h-4 w-4 text-primary/60" />
-                  White to move. Make your opening.
+                  {state.playerColor === "w"
+                    ? "White to move. Make your opening."
+                    : "Harmon opens with White. Prepare your defense."}
                 </motion.div>
               )}
             </AnimatePresence>
@@ -356,7 +415,7 @@ export function GameScreen({ playerName, initialDifficulty, onExit }: GameScreen
                   onClose={game.closeReview}
                   onReplay={() => {
                     game.closeReview();
-                    game.newGame();
+                    game.newGame({ playerColor: state.playerColor });
                   }}
                 />
               </motion.div>
