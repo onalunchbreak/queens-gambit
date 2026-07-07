@@ -15,7 +15,6 @@ import {
 import {
   ChevronLeft,
   ChevronRight,
-  X,
   Brain,
   Sparkles,
   RotateCcw,
@@ -24,7 +23,7 @@ import {
 } from "lucide-react";
 import { ChessBoard } from "./ChessBoard";
 import { GameReview } from "./GameReview";
-import { useChessGame, START_FEN } from "./useChessGame";
+import { START_FEN } from "./useChessGame";
 import { reviewPosition } from "./review-util";
 import { cn } from "@/lib/utils";
 import { AnnotationKind, ReviewResult } from "@/lib/chess/types";
@@ -95,7 +94,8 @@ export function AnalysisModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[min(96vw,1100px)] max-h-[92vh] gap-0 overflow-hidden p-0 sm:rounded-2xl">
+      <DialogContent className="max-w-[min(97vw,1280px)] max-h-[94vh] gap-0 overflow-hidden p-0 sm:rounded-2xl">
+        {/* Header */}
         <DialogHeader className="border-b border-border bg-gradient-to-r from-card to-muted/50 px-4 py-2.5 shrink-0">
           <div className="flex items-center justify-between gap-2 pr-6">
             <div className="flex items-center gap-2 min-w-0">
@@ -109,8 +109,10 @@ export function AnalysisModal({
                 </span>
               )}
             </div>
-            {reviewLoading && (
-              <span className="text-xs text-muted-foreground italic shrink-0">Computing…</span>
+            {(reviewLoading || analysisLoading) && (
+              <span className="text-xs text-muted-foreground italic shrink-0">
+                {analysisLoading ? "Harmon is reviewing…" : "Computing review…"}
+              </span>
             )}
           </div>
           <DialogDescription className="sr-only">
@@ -119,9 +121,9 @@ export function AnalysisModal({
         </DialogHeader>
 
         {/* Body: scrolls on mobile, dual-pane on desktop */}
-        <div className="flex max-h-[calc(92vh-52px)] flex-col overflow-y-auto md:flex-row md:overflow-hidden">
-          {/* Left: replay board + controls */}
-          <div className="flex flex-col gap-2 p-3 md:w-[54%] md:shrink-0 md:overflow-y-auto md:border-r md:border-border">
+        <div className="flex max-h-[calc(94vh-52px)] flex-col overflow-y-auto md:flex-row md:overflow-hidden">
+          {/* ───── Left: replay board + controls ───── */}
+          <div className="flex flex-col gap-2 p-3 md:w-[56%] md:shrink-0 md:overflow-y-auto md:border-r md:border-border">
             <div className="relative">
               {reviewPos ? (
                 <ChessBoard
@@ -152,64 +154,63 @@ export function AnalysisModal({
 
             {/* Replay controls */}
             {review && (
-              <div className="space-y-2 rounded-lg border border-border bg-card/60 p-3">
-                <div className="flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-1.5">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="h-8 px-2"
-                      onClick={() => {
-                        setAutoPlay(false);
-                        onChangeIndex(0);
-                      }}
-                      disabled={idx === 0}
-                    >
-                      <RotateCcw className="h-3.5 w-3.5" />
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="h-8 px-3"
-                      onClick={() => {
-                        setAutoPlay(false);
-                        onChangeIndex(Math.max(0, idx - 1));
-                      }}
-                      disabled={idx === 0}
-                    >
-                      <ChevronLeft className="h-4 w-4" /> Prev
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant={outlinePrimaryClass()}
-                      className="h-8 px-3"
-                      onClick={() => setAutoPlay((p) => !p)}
-                      disabled={idx >= total}
-                    >
-                      {autoPlay ? (
-                        <>
-                          <Pause className="h-3.5 w-3.5" /> Pause
-                        </>
-                      ) : (
-                        <>
-                          <Play className="h-3.5 w-3.5" /> Play
-                        </>
-                      )}
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="h-8 px-3"
-                      onClick={() => {
-                        setAutoPlay(false);
-                        onChangeIndex(Math.min(total, idx + 1));
-                      }}
-                      disabled={idx >= total}
-                    >
-                      Next <ChevronRight className="h-4 w-4" />
-                    </Button>
-                  </div>
-                  <span className="text-xs tabular-nums text-muted-foreground">
+              <div className="space-y-2 rounded-lg border border-border bg-card/60 p-2.5">
+                {/* Button row — wraps on narrow screens */}
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-8 w-8 p-0"
+                    onClick={() => {
+                      setAutoPlay(false);
+                      onChangeIndex(0);
+                    }}
+                    disabled={idx === 0}
+                    title="Reset to start"
+                  >
+                    <RotateCcw className="h-3.5 w-3.5" />
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-8 px-3"
+                    onClick={() => {
+                      setAutoPlay(false);
+                      onChangeIndex(Math.max(0, idx - 1));
+                    }}
+                    disabled={idx === 0}
+                  >
+                    <ChevronLeft className="h-4 w-4" /> Prev
+                  </Button>
+                  <Button
+                    size="sm"
+                    className="h-8 px-3 bg-primary text-primary-foreground hover:bg-primary/90"
+                    onClick={() => setAutoPlay((p) => !p)}
+                    disabled={idx >= total}
+                  >
+                    {autoPlay ? (
+                      <>
+                        <Pause className="h-3.5 w-3.5" /> Pause
+                      </>
+                    ) : (
+                      <>
+                        <Play className="h-3.5 w-3.5" /> Play
+                      </>
+                    )}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-8 px-3"
+                    onClick={() => {
+                      setAutoPlay(false);
+                      onChangeIndex(Math.min(total, idx + 1));
+                    }}
+                    disabled={idx >= total}
+                  >
+                    Next <ChevronRight className="h-4 w-4" />
+                  </Button>
+                  <span className="ml-auto text-xs tabular-nums text-muted-foreground px-1">
                     {idx} / {total}
                   </span>
                 </div>
@@ -226,20 +227,25 @@ export function AnalysisModal({
                 />
                 {/* Current move annotation chip */}
                 {annotation && (
-                  <div className="mt-2 flex items-center gap-2 rounded-md border border-border bg-background/60 px-2.5 py-1.5">
+                  <div className="mt-1.5 flex flex-wrap items-center gap-2 rounded-md border border-border bg-background/60 px-2.5 py-1.5">
                     <span
                       className={cn(
-                        "rounded-md border px-2 py-0.5 text-[11px] font-bold",
+                        "rounded-md border px-2 py-0.5 text-xs font-bold shrink-0",
                         KIND_BADGE[annotation.kind],
                       )}
                     >
                       {KIND_LABEL[annotation.kind]}
                     </span>
-                    <span className="font-mono text-sm font-semibold text-foreground">
+                    <span className="font-mono text-sm font-semibold text-foreground shrink-0">
                       {annotation.san}
                     </span>
-                    <span className="ml-auto text-[11px] text-muted-foreground">
+                    <span className="ml-auto text-xs text-muted-foreground shrink-0">
                       {annotation.byColor === "w" ? "White" : "Black"}
+                      {annotation.bestMoveSan && annotation.bestMoveSan !== annotation.san && (
+                        <span className="ml-2 text-muted-foreground/70">
+                          engine: <span className="font-mono font-medium">{annotation.bestMoveSan}</span>
+                        </span>
+                      )}
                     </span>
                   </div>
                 )}
@@ -247,33 +253,30 @@ export function AnalysisModal({
             )}
           </div>
 
-          {/* Right: coach's analysis + move list */}
-          <div className="flex flex-col gap-3 p-3 md:w-[46%] md:overflow-y-auto">
-            {/* Coach's analysis (LLM) */}
-            <div className="rounded-xl border border-primary/30 bg-gradient-to-br from-card to-muted/40 p-4 shadow-sm">
-              <div className="mb-2 flex items-center justify-between">
+          {/* ───── Right: coach's analysis + move list ───── */}
+          <div className="flex flex-col gap-3 p-3 md:w-[44%] md:min-h-0 md:overflow-y-auto">
+            {/* Coach's analysis (LLM) — fills available space */}
+            <div className="flex flex-col rounded-xl border border-primary/30 bg-gradient-to-br from-card to-muted/40 p-3 shadow-sm min-h-0">
+              <div className="mb-2 flex items-center justify-between shrink-0">
                 <div className="flex items-center gap-2">
                   <Sparkles className="h-4 w-4 text-primary" />
                   <span className="text-sm font-semibold text-foreground">
                     Coach&apos;s Analysis
                   </span>
                 </div>
-                {analysisLoading && (
-                  <span className="text-xs text-muted-foreground italic">Harmon is reviewing…</span>
-                )}
               </div>
               {analysisLoading ? (
                 <div className="space-y-2">
-                  {[0, 1, 2, 3].map((i) => (
+                  {[0, 1, 2, 3, 4].map((i) => (
                     <div
                       key={i}
                       className="h-3 animate-pulse rounded bg-muted"
-                      style={{ width: `${90 - i * 8}%` }}
+                      style={{ width: `${92 - i * 7}%` }}
                     />
                   ))}
                 </div>
               ) : analysis ? (
-                <ScrollArea className="max-h-[280px]">
+                <ScrollArea className="flex-1 min-h-0 max-h-[calc(94vh-280px)]">
                   <div className="space-y-2 pr-2">
                     {analysis.split(/\n\n+/).filter(Boolean).map((para, i) => (
                       <p key={i} className="text-[13px] leading-relaxed text-foreground/85">
@@ -283,25 +286,25 @@ export function AnalysisModal({
                   </div>
                 </ScrollArea>
               ) : (
-                <p className="text-xs text-muted-foreground">
-                  Press &ldquo;Re-run analysis&rdquo; for a written breakdown.
+                <p className="text-xs text-muted-foreground py-2">
+                  Analysis will appear here automatically.
                 </p>
               )}
-              {!analysisLoading && (
+              {analysis && !analysisLoading && (
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="mt-2 h-7 px-2 text-xs"
+                  className="mt-2 h-7 px-2 text-xs shrink-0 self-start"
                   onClick={onRerunAnalysis}
                   disabled={analysisLoading || reviewLoading}
                 >
                   <RotateCcw className="h-3 w-3 mr-1" />
-                  {analysis ? "Re-run analysis" : "Generate analysis"}
+                  Re-run analysis
                 </Button>
               )}
             </div>
 
-            {/* Compact move list */}
+            {/* Compact move list / review detail */}
             {review && (
               <GameReview
                 review={review}
@@ -341,10 +344,3 @@ const KIND_BADGE: Record<AnnotationKind, string> = {
   blunder: "bg-rose-500/15 text-rose-700 dark:text-rose-400 border-rose-500/30",
   book: "bg-stone-500/15 text-stone-700 dark:text-stone-300 border-stone-500/30",
 };
-
-// Use a primary-styled outline button for the Play button.
-function outlinePrimaryClass() {
-  return "outline";
-}
-
-void X;

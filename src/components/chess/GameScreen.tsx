@@ -107,6 +107,20 @@ export function GameScreen({ playerName, initialDifficulty, initialColor, onExit
   // resume audio on first interaction
   const resumeAudio = () => soundManager.resume();
 
+  // Auto-generate the LLM analysis when the game ends (so it's ready when the
+  // user opens the modal). Only fires once per game via the savedRef guard in
+  // the hook — the analysisLoading/analysis checks prevent duplicate calls.
+  useEffect(() => {
+    if (!state.gameOver) return;
+    if (state.analysis || state.analysisLoading) return;
+    if (state.history.length === 0) return;
+    // Small delay so the confetti/banner render first.
+    const t = setTimeout(() => {
+      void game.requestAnalysis();
+    }, 800);
+    return () => clearTimeout(t);
+  }, [state.gameOver, state.analysis, state.analysisLoading, state.history.length, game]);
+
   // Compute check info from current fen (live mode).
   const liveCheck = useMemo(() => {
     try {
@@ -227,9 +241,9 @@ export function GameScreen({ playerName, initialDifficulty, initialColor, onExit
       </header>
 
       {/* ─────────── Main: 3-column layout (left info | board | right eval) ─────────── */}
-      <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-3 px-3 py-3 xl:flex-row xl:items-stretch xl:gap-4">
+      <main className="mx-auto flex w-full max-w-[1200px] flex-1 flex-col gap-3 px-3 py-3 xl:flex-row xl:items-start xl:justify-center xl:gap-3">
         {/* LEFT panel: Harmon's last move + move history (utilizes the empty left space) */}
-        <aside className="order-2 flex flex-col gap-3 xl:order-1 xl:w-[260px] shrink-0">
+        <aside className="order-2 flex flex-col gap-3 xl:order-1 xl:w-[280px] shrink-0">
           {/* Harmon's last move / thinking */}
           <div className="rounded-xl border border-border bg-card/80 p-3 shadow-sm">
             <AnimatePresence mode="wait">
@@ -329,7 +343,7 @@ export function GameScreen({ playerName, initialDifficulty, initialColor, onExit
               className="h-8"
               onClick={() => {
                 setAnalysisOpen(true);
-                if (!state.review && !state.analysis && !state.reviewLoading && !state.analysisLoading) {
+                if (!state.analysis && !state.analysisLoading) {
                   void game.requestAnalysis();
                 }
               }}
@@ -384,7 +398,7 @@ export function GameScreen({ playerName, initialDifficulty, initialColor, onExit
                   className="mt-2 h-8"
                   onClick={() => {
                     setAnalysisOpen(true);
-                    if (!state.review && !state.analysis && !state.reviewLoading && !state.analysisLoading) {
+                    if (!state.analysis && !state.analysisLoading) {
                       void game.requestAnalysis();
                     }
                   }}
@@ -399,8 +413,8 @@ export function GameScreen({ playerName, initialDifficulty, initialColor, onExit
         </aside>
 
         {/* CENTER: board + captured trays */}
-        <div className="order-1 flex flex-col items-center gap-2 xl:order-2 xl:flex-1 xl:justify-start">
-          <div className="w-full max-w-[min(560px,calc(100vh-140px))]">
+        <div className="order-1 flex flex-col items-center gap-2 xl:order-2 xl:flex-none xl:justify-start">
+          <div className="w-full max-w-[min(580px,calc(100vh-180px))]">
             {/* Captured trays */}
             <div className="mb-2 flex justify-between gap-2">
               <CapturedTray
@@ -450,7 +464,7 @@ export function GameScreen({ playerName, initialDifficulty, initialColor, onExit
         </div>
 
         {/* RIGHT panel: eval bar + status (utilizes the right space, compact) */}
-        <aside className="order-3 flex flex-col gap-3 xl:w-[240px] shrink-0">
+        <aside className="order-3 flex flex-col gap-3 xl:w-[260px] shrink-0">
           <div className="rounded-xl border border-border bg-card/80 p-3 shadow-sm">
             <EvalBar
               prob={state.evalProb}

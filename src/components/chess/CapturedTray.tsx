@@ -47,17 +47,17 @@ export function CapturedTray({ capturedBy, captured, label, align }: CapturedTra
   return (
     <div
       className={
-        "flex items-center gap-1.5 rounded-lg border border-border bg-card/60 px-2 py-1 h-9 " +
+        "flex items-center gap-2 rounded-lg border border-border bg-card/60 px-2.5 py-1.5 h-12 " +
         "flex-1 min-w-0 overflow-hidden " +
         (align === "right" ? "flex-row-reverse" : "flex-row")
       }
     >
-      <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground whitespace-nowrap shrink-0">
+      <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground whitespace-nowrap shrink-0">
         {label}
       </span>
       <div
         className={
-          "flex items-center gap-0.5 min-w-0 overflow-x-auto harmon-scroll " +
+          "flex items-center gap-1 min-w-0 overflow-x-auto harmon-scroll " +
           (align === "right" ? "flex-row-reverse" : "")
         }
         style={{ scrollbarWidth: "thin" }}
@@ -91,7 +91,7 @@ export function CapturedTray({ capturedBy, captured, label, align }: CapturedTra
                     damping: 18,
                     delay: 0,
                   }}
-                  className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full ring-1 ring-border/50"
+                  className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full ring-1 ring-border/50"
                   style={{
                     background: isWhitePiece
                       ? "linear-gradient(135deg, rgba(43,30,20,0.92), rgba(28,20,12,0.92))"
@@ -104,7 +104,7 @@ export function CapturedTray({ capturedBy, captured, label, align }: CapturedTra
                   <span
                     style={{
                       fontFamily: FONT_STACK,
-                      fontSize: 15,
+                      fontSize: 20,
                       lineHeight: 1,
                       color: isWhitePiece ? "var(--piece-ivory)" : "var(--piece-ebony)",
                       WebkitTextStroke: isWhitePiece
