@@ -662,7 +662,7 @@ export function useChessGame() {
       ...prev,
       reviewLoading: true,
       review: null,
-      reviewIndex: sans.length,
+      reviewIndex: 0,
       analysis: "",
     }));
     try {
@@ -676,7 +676,7 @@ export function useChessGame() {
         ...prev,
         review: data,
         reviewLoading: false,
-        reviewIndex: data.annotations.length,
+        reviewIndex: 0,
       }));
     } catch (err) {
       console.error("review failed", err);
@@ -694,7 +694,7 @@ export function useChessGame() {
     // analysis can reference per-move annotations.
     let annotations = state.review?.annotations ?? [];
     if (annotations.length === 0) {
-      setState((prev) => ({ ...prev, reviewLoading: true, reviewIndex: sans.length }));
+      setState((prev) => ({ ...prev, reviewLoading: true, reviewIndex: 0 }));
       try {
         const res = await fetch("/api/review", {
           method: "POST",
@@ -707,7 +707,7 @@ export function useChessGame() {
           ...prev,
           review: data,
           reviewLoading: false,
-          reviewIndex: data.annotations.length,
+          reviewIndex: 0,
         }));
       } catch {
         setState((prev) => ({ ...prev, reviewLoading: false }));

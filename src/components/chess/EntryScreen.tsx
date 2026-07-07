@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
+import { useTheme } from "next-themes";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { DifficultySelector } from "./DifficultySelector";
@@ -14,9 +15,13 @@ import { Shuffle } from "lucide-react";
 const FONT_STACK =
   '"Segoe UI Symbol", "Apple Symbols", "Noto Sans Symbols2", "Noto Sans Symbols", "DejaVu Sans", sans-serif';
 
-// 4 chess-themed artworks; one is picked at random on each page load so the
-// landing page never feels static. Indexed 1..4 to match the file names.
-const LOGO_COUNT = 4;
+// Theme-aware logo sets. Light-mode logos have warm cream backgrounds with
+// dark mahogany pieces; dark-mode logos have deep charcoal-brown backgrounds
+// with luminous gold/ivory pieces. Each set has 2 variants; one is picked at
+// random on every page load so the landing page rotates but always matches
+// the active theme.
+const LIGHT_LOGOS = ["/chess-logos/light-1.png", "/chess-logos/light-2.png"];
+const DARK_LOGOS = ["/chess-logos/dark-1.png", "/chess-logos/dark-2.png"];
 
 interface EntryScreenProps {
   onStart: (name: string, difficulty: Difficulty, color: PlayColor) => void;
@@ -25,11 +30,23 @@ interface EntryScreenProps {
 type ColorChoice = "w" | "b" | "random";
 
 export function EntryScreen({ onStart }: EntryScreenProps) {
+  const { resolvedTheme } = useTheme();
   const [name, setName] = useState("");
   const [difficulty, setDifficulty] = useState<Difficulty>("club");
   const [colorChoice, setColorChoice] = useState<ColorChoice>("w");
-  // Pick a random logo on mount (1-indexed). Changes on every refresh.
-  const [logoIndex] = useState(() => 1 + Math.floor(Math.random() * LOGO_COUNT));
+  // Random pick within the set (rotates on every refresh).
+  const [variant, setVariant] = useState(0);
+
+  // Re-roll the variant on mount so it changes each refresh.
+  useEffect(() => {
+    const raf = requestAnimationFrame(() => setVariant(Math.floor(Math.random() * 2)));
+    return () => cancelAnimationFrame(raf);
+  }, []);
+
+  // Choose the logo set based on the resolved theme; default to light during
+  // SSR / before mount to avoid hydration mismatch.
+  const isDark = resolvedTheme === "dark";
+  const logoSrc = (isDark ? DARK_LOGOS : LIGHT_LOGOS)[variant];
 
   const submit = () => {
     const trimmed = name.trim();
@@ -74,7 +91,7 @@ export function EntryScreen({ onStart }: EntryScreenProps) {
             className="relative h-28 w-28 sm:h-32 sm:w-32 overflow-hidden rounded-full border-2 border-primary/40 shadow-lg"
           >
             <Image
-              src={`/chess-logos/logo-${logoIndex}.png`}
+              src={logoSrc}
               alt="Harmon's Gambit"
               fill
               sizes="128px"
