@@ -359,3 +359,19 @@ Work Log:
 
 Stage Summary:
 - React infinite-loop error fixed (ref-guarded auto-analysis). Coach's Analysis now reliable (retry + rich fallback). Code professionally refactored into focused components (GameScreen 625→262 lines). README updated with new structure. All core features verified working.
+
+---
+Task ID: 17
+Agent: main
+Task: Fix stalemate draw issue + promotion dialog visibility in dark mode.
+
+Work Log:
+- Stalemate warning system: when the player makes a move, the game now simulates it first using a Chess clone. If `sim.isStalemate() && !sim.isCheckmate()`, the move is held and a warning dialog appears: "This move causes a stalemate!" with an explanation that stalemate = draw, not win, and the player should deliver checkmate instead (king in check + no escape). Player can "Choose another move" (cancel) or "Proceed (draw)" (confirm). Works for both regular moves and promotion moves. This prevents the frustrating scenario where overwhelming material advantage ends in a draw because the player accidentally stalemates the AI king.
+- New state: `pendingStalemateWarning: {from, to, promotion?} | null` in GameState.
+- New methods: `confirmStalemateMove()` (applies the held move) and `cancelStalemateMove()` (clears the warning).
+- Promotion dialog visibility fix: pieces were using `color: var(--piece-ebony)` (#0a0805 in dark mode) on a dark card = invisible. Each piece button now has a contrasting backdrop chip: dark disc (rgba(43,30,20,0.92)) for white player's pieces, light cream disc (rgba(247,239,217,0.96)) for black player's pieces. The piece glyph color matches the player's color (ivory for white, ebony for black). This is the same approach as the captured-pieces trays, already VLM-verified as visible in both themes. Added `playerColor` prop to GameDialogs.
+- Git commit: "fix: stalemate warning + promotion dialog visibility in dark mode"
+- Lint clean. All core features remain intact.
+
+Stage Summary:
+- Players are now warned before making a move that would cause a stalemate draw, preventing accidental draws when they have a winning advantage. Promotion pieces are now visible in dark mode via contrasting backdrop chips. All existing functionality unchanged.
