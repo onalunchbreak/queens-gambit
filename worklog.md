@@ -249,3 +249,36 @@ Work Log:
 
 Stage Summary:
 - Navbar is now compact and utilized (difficulty pills + influence toggle inline). 3-column layout eliminates wasted space and long scroll. Harmon's last move moved to left of board. Analysis modal is fully responsive (dual-pane desktop, stacked scrollable mobile). Dark/light contrast verified across all surfaces. Full UAT passed for every feature in both themes.
+
+---
+Task ID: 12
+Agent: main
+Task: Fix captured tray size, modal responsiveness, spacing, auto-analysis, UAT.
+
+Work Log:
+- CapturedTray: increased chip size from h-6 w-6 (24px) to h-8 w-8 (32px), glyph from 15px to 20px, tray height from h-9 (36px) to h-12 (48px), gap between chips from 0.5 to 1. Pieces are now clearly visible and not cramped.
+- Layout spacing: reduced container max-width from max-w-7xl (1280px) to max-w-[1200px], changed board column from xl:flex-1 to xl:flex-none (so it doesn't absorb extra space), added xl:justify-center. Gap between board and side panels is now 14px (was much larger). Page fits with zero overflow (577px = 577px viewport).
+- Analysis modal: 
+  - Fixed width: the shadcn Dialog default sm:max-w-lg (512px) was overriding the custom max-width. Added sm:max-w-[min(97vw,1280px)] to override. Modal is now 1242px on desktop (was 576px).
+  - Fixed button overflow: replay controls now use flex-wrap so buttons wrap on narrow screens instead of being cut off.
+  - Fixed text overflow: Coach's Analysis now uses flex-1 min-h-0 ScrollArea instead of fixed max-h-[280px], so it fills available space and scrolls properly.
+  - Fixed Play button: was using a broken outlinePrimaryClass() helper, now uses proper className with bg-primary.
+  - Added engine suggestion text to the annotation chip.
+  - Better proportions: 56%/44% split (was 54%/46%).
+  - Max-height increased to 94vh (was 92vh).
+- Auto-generate analysis: added useEffect that triggers requestAnalysis() 800ms after gameOver becomes true (if no analysis exists yet). Verified: /api/analyze was called automatically after resign, analysis text was immediately visible when opening the modal.
+- Git commits: committed all changes with descriptive messages:
+  - "fix(layout): improve captured trays, modal responsiveness, spacing & auto-analysis"
+  - "fix(modal): override Dialog default sm:max-w-lg so analysis modal is full-width"
+- UAT (PM lens, both themes):
+  1. Light mode: zero overflow (577=577), tight 14px gaps, trays readable. VLM-confirmed.
+  2. Dark mode: strong contrast on all surfaces. VLM-confirmed.
+  3. Moves + AI response: Harmon's last move in left panel with narration. ✓
+  4. Analyse modal (desktop): 1242px wide, dual layout, no conflicts, auto-analysis loaded. VLM-confirmed.
+  5. Analyse modal (mobile): stacks vertically, scrollable, no cutoff. VLM-confirmed.
+  6. Resign + auto-analysis + confetti: resign → "Harmon Wins" confetti → auto-analysis generated (API called 5.4s) → visible in modal. ✓
+  7. Mobile game layout: board prominent, trays readable, navbar compact. VLM-confirmed.
+- No console errors, lint clean.
+
+Stage Summary:
+- Captured trays are bigger and readable. Spacing between board and panels is tight and even (14px). Analysis modal is full-width (1242px desktop), responsive (stacks on mobile), with no text overflow or button cutoff. Analysis auto-generates on game end. All UAT passed in both themes.
