@@ -36,16 +36,23 @@ export function EntryScreen({ onStart }: EntryScreenProps) {
   const [colorChoice, setColorChoice] = useState<ColorChoice>("w");
   // Random pick within the set (rotates on every refresh).
   const [variant, setVariant] = useState(0);
+  // Guard against hydration mismatch: resolvedTheme is undefined on the server
+  // but may be "dark" on the client. We render a stable logo until mounted.
+  const [mounted, setMounted] = useState(false);
 
-  // Re-roll the variant on mount so it changes each refresh.
+  // Re-roll the variant on mount so it changes each refresh, and mark as
+  // mounted so we can safely use the resolved theme.
   useEffect(() => {
-    const raf = requestAnimationFrame(() => setVariant(Math.floor(Math.random() * 2)));
+    const raf = requestAnimationFrame(() => {
+      setVariant(Math.floor(Math.random() * 2));
+      setMounted(true);
+    });
     return () => cancelAnimationFrame(raf);
   }, []);
 
-  // Choose the logo set based on the resolved theme; default to light during
-  // SSR / before mount to avoid hydration mismatch.
-  const isDark = resolvedTheme === "dark";
+  // Choose the logo set based on the resolved theme. Before mount, always use
+  // a light logo (index 0) to match SSR output and avoid hydration mismatch.
+  const isDark = mounted && resolvedTheme === "dark";
   const logoSrc = (isDark ? DARK_LOGOS : LIGHT_LOGOS)[variant];
 
   const submit = () => {

@@ -86,6 +86,7 @@ export async function POST(req: NextRequest) {
 
     let analysis = "";
     // Retry up to 3 times on rate-limit (429) or transient errors.
+    // Use longer backoff for 429s to give the rate limit time to reset.
     for (let attempt = 1; attempt <= 3; attempt++) {
       try {
         const completion = await zai.chat.completions.create({
@@ -98,9 +99,9 @@ export async function POST(req: NextRequest) {
         analysis = (completion.choices[0]?.message?.content ?? "").trim();
         if (analysis) break;
       } catch (e) {
-        // Wait before retry (exponential backoff): 1s, 2s, 4s.
+        // Wait before retry with longer backoff: 2s, 5s, 10s.
         if (attempt < 3) {
-          await new Promise((r) => setTimeout(r, 1000 * attempt));
+          await new Promise((r) => setTimeout(r, 2000 * attempt + 1000));
         }
       }
     }
@@ -108,7 +109,7 @@ export async function POST(req: NextRequest) {
     // If the LLM failed after retries, build a richer heuristic fallback that
     // still references the player's specific mistakes and the game result.
     if (!analysis) {
-      const playerSide = playerColor;
+      const playerSide = playerColor === "b" ? "Black" : "White";
       const parts: string[] = [];
       parts.push(
         `${playerName}, your game as ${playerSide} ended with: ${result}.`,
