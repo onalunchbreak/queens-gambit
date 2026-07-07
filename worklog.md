@@ -318,3 +318,23 @@ Work Log:
 
 Stage Summary:
 - Landing page now shows a rotating chess-themed artwork (changes on every refresh). Analysis modal board fits so controls are always visible. Game screen has comfortable spacing between board and panels. All committed to git.
+
+---
+Task ID: 15
+Agent: main
+Task: Theme-aware user artwork logos + fix modal default state to move 0.
+
+Work Log:
+- Processed 4 user-provided chess-themed images (Gemini_Generated_Image_wgjwmwwgjwmwwgjw*.png) using PIL:
+  - Cropped to center square, applied circular mask (removed white square corners)
+  - Removed Gemini watermark from bottom-right corner (blended with bg color)
+  - Added subtle walnut border ring + soft drop shadow
+  - Saved at 400x400 as light-1.png, light-2.png (cream bg, brown silhouettes → light mode) and dark-1.png, dark-2.png (dark bg, gold/ivory silhouettes → dark mode)
+  - VLM-verified: all 4 circular, no watermark, correct theme backgrounds, high contrast
+- EntryScreen: uses useTheme() from next-themes to pick the correct logo set based on resolvedTheme. Light mode picks from LIGHT_LOGOS, dark mode from DARK_LOGOS. A random variant (0 or 1) is rolled on mount via rAF so the logo rotates on each refresh. Verified: light mode shows light-1.png, dark mode shows dark-1.png, switching theme updates the logo.
+- Analysis modal default state: changed reviewIndex from sans.length/data.annotations.length to 0 in both requestReview and requestAnalysis code paths. Now when the modal opens (after game end or Analyse click), the board shows the starting position (move 0 / N) instead of the final position. User scrubs forward with Prev/Play/Next. VLM-confirmed: "starting position, all pieces in initial squares, move counter shows 0 / 2".
+- Git commit: "feat(logos+modal): theme-aware user artwork logos, modal starts at move 0"
+- No console errors, lint clean.
+
+Stage Summary:
+- Logos now use the user's artwork, properly processed (circular, no watermark, themed border), and matched to the active theme (light logos for light mode, dark logos for dark mode) with random rotation on refresh. Analysis modal opens at the starting position, not the final position.
