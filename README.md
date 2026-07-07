@@ -1,8 +1,17 @@
-# ♞ Harmon's Gambit
+# ♞ Queen's Gambit (Harmon's Gambit)
 
 > *A chess platform where classical tournament aesthetics meet modern AI — inspired by Beth Harmon's brilliant, calculating playstyle from The Queen's Gambit.*
 
-**Harmon's Gambit** is a full-featured chess application that lets you play against an AI engine with three difficulty levels, get real-time position evaluation, receive personalized coaching analysis after each game, and track your progress on a persistent leaderboard. The entire experience is wrapped in a warm, tournament-hall aesthetic with polished walnut-and-maple boards, Staunton pieces, and a subtle parchment texture — AlphaZero meets the World Chess Championship.
+Live Deployed Site: [https://ai-queens-gambit.space-z.ai](https://ai-queens-gambit.space-z.ai)
+
+---
+
+> [!NOTE]
+> This personalized Chess AI was created in collaboration with **Z.Ai's Latest GLM 5.2 Model**.
+
+---
+
+**Queen's Gambit** (originally developed as *Harmon's Gambit*) is a full-featured chess application that lets you play against an AI engine with three difficulty levels, get real-time position evaluation, receive personalized coaching analysis after each game, and track your progress on a persistent leaderboard. The entire experience is wrapped in a warm, tournament-hall aesthetic with polished walnut-and-maple boards, Staunton pieces, and a subtle parchment texture — AlphaZero meets the World Chess Championship.
 
 ---
 
