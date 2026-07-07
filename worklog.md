@@ -338,3 +338,24 @@ Work Log:
 
 Stage Summary:
 - Logos now use the user's artwork, properly processed (circular, no watermark, themed border), and matched to the active theme (light logos for light mode, dark logos for dark mode) with random rotation on refresh. Analysis modal opens at the starting position, not the final position.
+
+---
+Task ID: 16
+Agent: main
+Task: Fix React error + missing analysis + professional code refactor.
+
+Work Log:
+- React error fix: the auto-analysis useEffect had `game` in its dependency array. Since `game` is a fresh object from useChessGame on every render, the effect re-ran on every render → called requestAnalysis → updated state → re-render → effect re-ran = infinite loop, causing the Next.js "1 Issue" error overlay. Fixed with a ref-guarded pattern: requestAnalysisRef holds the latest function (updated in a separate effect), autoAnalysisRanRef ensures it fires exactly once per game end. Removed `game` from deps.
+- Missing Coach's Analysis fix: /api/analyze was failing silently on 429 rate-limit errors (LLM API). Added retry loop (3 attempts with exponential backoff: 1s, 2s, 4s). If all retries fail, a richer heuristic fallback now generates a personalized analysis referencing the player's worst move (with SAN + engine suggestion), brilliant moves count, and the game result — so the panel is never empty. Added `inaccuracies` variable that was referenced but undefined.
+- Code refactor: split GameScreen.tsx (625 lines) into 4 focused components:
+  - GameNavbar.tsx (117 lines): sticky navbar with brand, influence toggle, difficulty pills, theme/sound/exit
+  - LeftPanel.tsx (185 lines): Harmon's last move/thinking, move history, game controls, game-over banner
+  - RightPanel.tsx (66 lines): eval bar, turn indicator, mobile difficulty selector
+  - GameDialogs.tsx (115 lines): promotion picker + resign confirmation
+  - GameScreen.tsx (262 lines): lean orchestrator that composes the above + handles state, derived values, auto-analysis
+- README updated: new file structure tree, architecture notes, v1.6.0 version history entry
+- UAT: game loads clean, play + resign triggers auto-analysis (no loop, no error overlay), Coach's Analysis generates ("Beth, your opening move with 1.e4 was solid..."), modal opens at move 0, no console errors.
+- Git commit: "refactor: fix React loop + analysis reliability + professional code structure"
+
+Stage Summary:
+- React infinite-loop error fixed (ref-guarded auto-analysis). Coach's Analysis now reliable (retry + rich fallback). Code professionally refactored into focused components (GameScreen 625→262 lines). README updated with new structure. All core features verified working.
