@@ -124,7 +124,8 @@ export function AnalysisModal({
         <div className="flex max-h-[calc(94vh-52px)] flex-col overflow-y-auto md:flex-row md:overflow-hidden">
           {/* ───── Left: replay board + controls ───── */}
           <div className="flex flex-col gap-2 p-3 md:w-[56%] md:shrink-0 md:overflow-y-auto md:border-r md:border-border">
-            <div className="relative">
+            {/* Constrain the board so the controls below stay in view without scrolling. */}
+            <div className="relative mx-auto w-full max-w-[380px]">
               {reviewPos ? (
                 <ChessBoard
                   pieces={reviewPos.pieces}

@@ -241,7 +241,7 @@ export function GameScreen({ playerName, initialDifficulty, initialColor, onExit
       </header>
 
       {/* ─────────── Main: 3-column layout (left info | board | right eval) ─────────── */}
-      <main className="mx-auto flex w-full max-w-[1200px] flex-1 flex-col gap-3 px-3 py-3 xl:flex-row xl:items-start xl:justify-center xl:gap-3">
+      <main className="mx-auto flex w-full max-w-[1280px] flex-1 flex-col gap-3 px-4 py-4 xl:flex-row xl:items-start xl:justify-center xl:gap-6">
         {/* LEFT panel: Harmon's last move + move history (utilizes the empty left space) */}
         <aside className="order-2 flex flex-col gap-3 xl:order-1 xl:w-[280px] shrink-0">
           {/* Harmon's last move / thinking */}
