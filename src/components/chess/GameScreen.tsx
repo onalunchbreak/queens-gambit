@@ -413,8 +413,8 @@ export function GameScreen({ playerName, initialDifficulty, initialColor, onExit
         </aside>
 
         {/* CENTER: board + captured trays */}
-        <div className="order-1 flex flex-col items-center gap-2 xl:order-2 xl:flex-none xl:justify-start">
-          <div className="w-full max-w-[min(580px,calc(100vh-180px))]">
+        <div className="order-1 flex flex-col items-center gap-2 xl:order-2 xl:flex-1 xl:justify-start">
+          <div className="w-full max-w-[600px]">
             {/* Captured trays */}
             <div className="mb-2 flex justify-between gap-2">
               <CapturedTray
@@ -498,12 +498,12 @@ export function GameScreen({ playerName, initialDifficulty, initialColor, onExit
               <span
                 className={
                   "rounded-full px-2 py-0.5 text-xs font-semibold " +
-                  (state.turn === state.playerColor
-                    ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400"
-                    : "bg-amber-500/15 text-amber-700 dark:text-amber-400")
+                  (state.isAiThinking || state.turn === state.aiColor
+                    ? "bg-amber-500/15 text-amber-700 dark:text-amber-400"
+                    : "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400")
                 }
               >
-                {state.turn === state.playerColor ? "Your move" : "Harmon thinking"}
+                {state.isAiThinking || state.turn === state.aiColor ? "Harmon thinking" : "Your move"}
               </span>
             </div>
             <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground">
