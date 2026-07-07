@@ -282,3 +282,24 @@ Work Log:
 
 Stage Summary:
 - Captured trays are bigger and readable. Spacing between board and panels is tight and even (14px). Analysis modal is full-width (1242px desktop), responsive (stacks on mobile), with no text overflow or button cutoff. Analysis auto-generates on game end. All UAT passed in both themes.
+
+---
+Task ID: 13
+Agent: main
+Task: Revert board size, fix turn indicator, write README.
+
+Work Log:
+- Board size revert: the board was inadvertently shrunk to 427px (580px max-width further limited by calc(100vh-150px) on a 577px viewport). Reverted to a clean 600px max-width with no viewport-height constraint. Board is now 600x600px — the prominent focal point. VLM-confirmed.
+- Turn indicator fix: the indicator used `state.turn === state.playerColor` which only checks the chess.js turn, not the AI thinking state. During the window between the player's move and the AI move completing, state.turn is the AI's color (correct) but the indicator could show stale state. Fixed to check `state.isAiThinking || state.turn === state.aiColor` — now correctly shows "Harmon thinking" whenever the AI is computing OR it's the AI's turn. Verified: shows "Harmon thinking" immediately after player moves (during AI think time), then "Your move" after the AI responds.
+- README.md: wrote comprehensive documentation from a product-person-turned-builder perspective:
+  - Feature overview table (what each feature means for the user)
+  - How-to-play guide for non-tech folks (10 steps)
+  - Developer section: tech stack, project structure, getting started, AI engine explanation, LLM coaching flow
+  - Full version history (v1.0.0 → v1.5.0) with what changed in each
+  - Design philosophy
+  - Testing notes
+- Git commit: "fix(board+turn): revert board to 600px, fix turn indicator race condition, add README"
+- UAT: board is 600px (prominent), turn indicator correct in both states, no console errors, lint clean.
+
+Stage Summary:
+- Board reverted to prominent 600px size. Turn indicator now correctly reflects AI thinking state. Comprehensive README added covering all features, versions, and dev details. All committed to git.
