@@ -100,6 +100,9 @@ export interface GameState {
   // Most recent capture (for triggering fly-off animation) — nonce-based.
   lastCapture: CapturedPiece | null;
   captureNonce: number;
+  // Pending stalemate warning: when the player's chosen move would cause a
+  // stalemate (draw), we show a confirmation dialog before applying it.
+  pendingStalemateWarning: { from: string; to: string; promotion?: string } | null;
 }
 
 const START_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
@@ -151,6 +154,7 @@ export function useChessGame() {
       captured: [],
       lastCapture: null,
       captureNonce: 0,
+      pendingStalemateWarning: null,
     };
   });
 
@@ -315,6 +319,22 @@ export function useChessGame() {
         if (mover && mover.type === "p" && sq[1] === lastRank) {
           return { ...prev, pendingPromotion: { from, to: sq }, selected: null, legalTargets: [] };
         }
+        // ── Stalemate check: simulate the move and see if it would result in
+        // a draw by stalemate. If so, warn the player before applying it. ──
+        const sim = new Chess(game.fen());
+        try {
+          sim.move({ from: from as Square, to: sq as Square });
+          if (sim.isStalemate() && !sim.isCheckmate()) {
+            return {
+              ...prev,
+              pendingStalemateWarning: { from, to: sq },
+              selected: null,
+              legalTargets: [],
+            };
+          }
+        } catch {
+          // ignore simulation errors
+        }
         queueMicrotask(() => applyMove(from, sq));
         return { ...prev, selected: null, legalTargets: [] };
       }
@@ -335,10 +355,42 @@ export function useChessGame() {
     });
   }, [applyMove]);
 
+  // Confirm a move that would cause a stalemate (the player chose to proceed).
+  const confirmStalemateMove = useCallback(() => {
+    setState((prev) => {
+      if (!prev.pendingStalemateWarning) return prev;
+      const { from, to, promotion } = prev.pendingStalemateWarning;
+      queueMicrotask(() => applyMove(from, to, promotion));
+      return { ...prev, pendingStalemateWarning: null };
+    });
+  }, [applyMove]);
+
+  // Cancel the stalemate warning (the player chose a different move).
+  const cancelStalemateMove = useCallback(() => {
+    setState((prev) => ({ ...prev, pendingStalemateWarning: null }));
+  }, []);
+
   const choosePromotion = useCallback((piece: "q" | "r" | "b" | "n") => {
     setState((prev) => {
       if (!prev.pendingPromotion) return prev;
       const { from, to } = prev.pendingPromotion;
+      // Stalemate check for promotion moves too.
+      const game = gameRef.current;
+      const sim = new Chess(game.fen());
+      try {
+        sim.move({ from: from as Square, to: to as Square, promotion: piece });
+        if (sim.isStalemate() && !sim.isCheckmate()) {
+          return {
+            ...prev,
+            pendingPromotion: null,
+            pendingStalemateWarning: { from, to, promotion: piece },
+            selected: null,
+            legalTargets: [],
+          };
+        }
+      } catch {
+        // ignore
+      }
       queueMicrotask(() => applyMove(from, to, piece));
       return { ...prev, pendingPromotion: null, selected: null, legalTargets: [] };
     });
@@ -501,6 +553,7 @@ export function useChessGame() {
       captured: [],
       lastCapture: null,
       captureNonce: 0,
+      pendingStalemateWarning: null,
     }));
   }, []);
 
@@ -753,6 +806,8 @@ export function useChessGame() {
     state,
     selectSquare,
     choosePromotion,
+    confirmStalemateMove,
+    cancelStalemateMove,
     setDifficulty,
     setPlayerColor,
     toggleHeatmap,

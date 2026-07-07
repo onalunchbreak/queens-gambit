@@ -32,7 +32,7 @@ interface GameScreenProps {
  *  - GameNavbar   (sticky header with difficulty pills, influence toggle, actions)
  *  - LeftPanel    (Harmon's last move, move history, controls, game-over banner)
  *  - RightPanel   (eval bar, turn indicator, mobile difficulty)
- *  - GameDialogs  (promotion picker, resign confirmation)
+ *  - GameDialogs  (promotion picker, stalemate warning, resign confirmation)
  *  - AnalysisModal (collapsible replay + coaching)
  */
 export function GameScreen({ playerName, initialDifficulty, initialColor, onExit }: GameScreenProps) {
@@ -233,12 +233,16 @@ export function GameScreen({ playerName, initialDifficulty, initialColor, onExit
       <GameDialogs
         pendingPromotion={state.pendingPromotion}
         confirmResign={confirmResign}
+        pendingStalemateWarning={state.pendingStalemateWarning}
+        playerColor={state.playerColor}
         onChoosePromotion={game.choosePromotion}
         onConfirmResign={() => {
           setConfirmResign(false);
           game.resign();
         }}
         onCancelResign={() => setConfirmResign(false)}
+        onConfirmStalemate={game.confirmStalemateMove}
+        onCancelStalemate={game.cancelStalemateMove}
       />
 
       <Confetti trigger={state.confetti} winner={state.winner} resultLabel={state.gameResult} />
