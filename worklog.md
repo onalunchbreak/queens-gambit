@@ -303,3 +303,18 @@ Work Log:
 
 Stage Summary:
 - Board reverted to prominent 600px size. Turn indicator now correctly reflects AI thinking state. Comprehensive README added covering all features, versions, and dev details. All committed to git.
+
+---
+Task ID: 14
+Agent: main
+Task: Rotating themed landing logos, fix modal board size, add panel spacing.
+
+Work Log:
+- Landing page logo: split the user-provided quad image (Gemini_Generated_Image) into 4 individual 400x400 chess-themed artworks (logo-1..4.png) in /public/chess-logos/. Replaced the static Unicode knight glyph in EntryScreen with a Next.js <Image> that picks a random logo on mount via useState(() => 1 + Math.floor(Math.random()*4)). The logo now rotates on every page refresh. VLM-confirmed: "chess-themed artwork with Beth Harmon-style silhouette."
+- Analysis modal board: the board was filling the full 56% pane width (~695px), making it too tall so the Prev/Play/Next controls required scrolling. Constrained the board wrapper to max-w-[380px] mx-auto. Board is now 380x380px; controls (Next button bottom at 524px) fit within the 577px viewport without scrolling. VLM-confirmed: "replay controls visible without scrolling, layout is clean."
+- Game screen spacing: increased the gap between the board and side panels from xl:gap-3 (12px) to xl:gap-6 (24px), widened the container to max-w-[1280px], and increased padding to px-4 py-4. The gap is now ~52px on each side (was ~14px), giving clear breathing room between sections.
+- Git commit: "feat(landing+layout): rotating themed logos, modal board fit, panel spacing"
+- UAT: logo rotates on refresh (logo-1, logo-2, logo-3 across 3 loads), modal controls visible without scroll, panels have clear spacing. No console errors, lint clean.
+
+Stage Summary:
+- Landing page now shows a rotating chess-themed artwork (changes on every refresh). Analysis modal board fits so controls are always visible. Game screen has comfortable spacing between board and panels. All committed to git.
