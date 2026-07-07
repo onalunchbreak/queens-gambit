@@ -47,21 +47,28 @@ export function CapturedTray({ capturedBy, captured, label, align }: CapturedTra
   return (
     <div
       className={
-        "flex items-center gap-2 rounded-lg border border-border bg-card/60 px-2.5 py-1.5 min-h-[34px] " +
+        "flex items-center gap-1.5 rounded-lg border border-border bg-card/60 px-2 py-1 h-9 " +
+        "flex-1 min-w-0 overflow-hidden " +
         (align === "right" ? "flex-row-reverse" : "flex-row")
       }
     >
-      <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground whitespace-nowrap">
+      <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground whitespace-nowrap shrink-0">
         {label}
       </span>
-      <div className={"flex flex-wrap items-center gap-0.5 min-h-[20px] " + (align === "right" ? "flex-row-reverse" : "")}>
+      <div
+        className={
+          "flex items-center gap-0.5 min-w-0 overflow-x-auto harmon-scroll " +
+          (align === "right" ? "flex-row-reverse" : "")
+        }
+        style={{ scrollbarWidth: "thin" }}
+      >
         <AnimatePresence mode="popLayout">
           {items.length === 0 ? (
-            <span key="empty" className="text-xs text-muted-foreground/50 italic">
+            <span key="empty" className="text-xs text-muted-foreground/50 italic shrink-0">
               —
             </span>
           ) : (
-            items.map((c, idx) => {
+            items.map((c) => {
               const isWhitePiece = trayColor === "w";
               return (
                 <motion.span
@@ -71,15 +78,11 @@ export function CapturedTray({ capturedBy, captured, label, align }: CapturedTra
                     opacity: 0,
                     scale: 0.4,
                     rotateY: -90,
-                    y: capturedBy === "w" ? -16 : 16,
-                    x: align === "right" ? 24 : -24,
                   }}
                   animate={{
                     opacity: 1,
                     scale: 1,
                     rotateY: 0,
-                    y: 0,
-                    x: 0,
                   }}
                   exit={{ opacity: 0, scale: 0.4 }}
                   transition={{
@@ -88,16 +91,12 @@ export function CapturedTray({ capturedBy, captured, label, align }: CapturedTra
                     damping: 18,
                     delay: 0,
                   }}
-                  className="inline-flex h-7 w-7 items-center justify-center rounded-full ring-1"
+                  className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full ring-1 ring-border/50"
                   style={{
-                    // Contrasting backdrop chip so BOTH piece colors are readable
-                    // in BOTH light and dark mode.
                     background: isWhitePiece
-                      ? "linear-gradient(135deg, rgba(43,30,20,0.92), rgba(28,20,12,0.92))" // dark disc for white piece
-                      : "linear-gradient(135deg, rgba(247,239,217,0.96), rgba(230,207,149,0.96))", // light disc for black piece
+                      ? "linear-gradient(135deg, rgba(43,30,20,0.92), rgba(28,20,12,0.92))"
+                      : "linear-gradient(135deg, rgba(247,239,217,0.96), rgba(230,207,149,0.96))",
                     boxShadow: "0 1px 2px rgba(0,0,0,0.25)",
-                    // ring color adapts: subtle in light, subtle in dark
-                    marginLeft: idx > 0 ? -6 : 0,
                     transformStyle: "preserve-3d",
                   }}
                   title={`${isWhitePiece ? "White" : "Black"} ${c.type}`}
@@ -105,12 +104,12 @@ export function CapturedTray({ capturedBy, captured, label, align }: CapturedTra
                   <span
                     style={{
                       fontFamily: FONT_STACK,
-                      fontSize: 18,
+                      fontSize: 15,
                       lineHeight: 1,
                       color: isWhitePiece ? "var(--piece-ivory)" : "var(--piece-ebony)",
                       WebkitTextStroke: isWhitePiece
-                        ? "0.8px var(--piece-ivory-stroke)"
-                        : "0.5px var(--piece-ebony-stroke)",
+                        ? "0.7px var(--piece-ivory-stroke)"
+                        : "0.4px var(--piece-ebony-stroke)",
                       textShadow: "0 1px 1px rgba(0,0,0,0.2)",
                     }}
                   >
@@ -123,7 +122,7 @@ export function CapturedTray({ capturedBy, captured, label, align }: CapturedTra
         </AnimatePresence>
       </div>
       {diff > 0 && (
-        <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 tabular-nums">
+        <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 tabular-nums shrink-0 ml-0.5">
           +{diff}
         </span>
       )}

@@ -195,3 +195,28 @@ Work Log:
 
 Stage Summary:
 - Dark-mode captured pieces now readable (contrast chips). Analyse Game button delivers LLM-powered personalized coaching suggestions. Influence toggle has a descriptive tooltip. App-wide font size increased for better readability.
+
+---
+Task ID: 10
+Agent: main
+Task: Responsive captured trays + collapsible Analysis modal with dual-layout replay.
+
+Work Log:
+- CapturedTray responsiveness fix: rewrote to fixed h-9 height, flex-1 min-w-0 with overflow-x-auto (horizontal scroll if many pieces), shrink-0 chips (h-6 w-6, no negative margin overlap), shrink-0 label + diff badge. No more vertical stacking/overflow. Verified: 38px fixed height on mobile, no overflow.
+- AnalysisModal (new component): a Dialog-based collapsible modal with dual layout:
+  - LEFT (52% on desktop, full on mobile): replay ChessBoard + controls (Reset, Prev, Play/Pause auto-play, Next) + Slider + current-move annotation chip (kind badge + SAN + side). The board shows review markers (Brilliant/Blunder squares) and best-move arrows.
+  - RIGHT (48% on desktop, stacks below on mobile): Coach's Analysis panel (LLM text with skeleton loading + Re-run button) + compact GameReview (summary + per-move detail).
+  - Responsive: md:flex-row side-by-side, flex-col stacked on mobile. Max-h-[92vh] with internal scroll.
+  - Closable via X button, ESC, or backdrop click. Reopenable via "Analyse Game" button or "View Analysis" button in the game-over banner.
+  - Auto-play steps through moves at 1.1s intervals; stops at end or on manual navigation.
+- GameScreen wiring:
+  - Added analysisOpen state.
+  - "Analyse Game" button now opens the modal + triggers requestAnalysis (if not already loading/loaded).
+  - Game-over banner now has a "View Analysis" button to reopen the modal.
+  - Removed the inline Coach's Analysis + Review panels from the side panel (moved into the modal) — the side panel no longer grows long, solving the "scroll down past the board" problem.
+  - GameReview now accepts a `compact` prop that hides its own slider/header (the modal provides controls).
+- VLM-verified: modal dual-layout (board left, analysis right), Prev/Play/Next controls work (4→3→2), ESC closes, reopen works, mobile stacks vertically, trays are single-row and neatly contained.
+- Lint clean (used rAF pattern for set-state-in-effect), no console/runtime errors. Cleaned test DB.
+
+Stage Summary:
+- Captured trays are now responsive (fixed height, horizontal scroll, no overflow). Analysis opens in a collapsible dual-layout modal with a full move-by-move replay board (Prev/Play/Next + markers/arrows) alongside the LLM coaching text — no more scrolling past the board to reach the analysis.

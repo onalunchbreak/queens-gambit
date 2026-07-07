@@ -33,6 +33,7 @@ import { GameReview } from "./GameReview";
 import { Confetti } from "./Confetti";
 import { Leaderboard } from "./Leaderboard";
 import { CapturedTray, CaptureFlyOff } from "./CapturedTray";
+import { AnalysisModal } from "./AnalysisModal";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { useChessGame, START_FEN, PlayColor } from "./useChessGame";
 import { reviewPosition } from "./review-util";
@@ -61,6 +62,7 @@ export function GameScreen({ playerName, initialDifficulty, initialColor, onExit
   const { state } = game;
   const [soundOn, setSoundOn] = useState(true);
   const [confirmResign, setConfirmResign] = useState(false);
+  const [analysisOpen, setAnalysisOpen] = useState(false);
   const boardWrapRef = useRef<HTMLDivElement | null>(null);
   const [boardRect, setBoardRect] = useState<{ width: number; height: number } | null>(null);
 
@@ -264,11 +266,16 @@ export function GameScreen({ playerName, initialDifficulty, initialColor, onExit
               variant="outline"
               size="sm"
               className="h-8"
-              onClick={game.requestAnalysis}
-              disabled={state.isAiThinking || state.reviewLoading || state.analysisLoading || state.history.length === 0}
+              onClick={() => {
+                setAnalysisOpen(true);
+                if (!state.review && !state.analysis && !state.reviewLoading && !state.analysisLoading) {
+                  void game.requestAnalysis();
+                }
+              }}
+              disabled={state.isAiThinking || state.history.length === 0}
             >
               <Flame className="h-3.5 w-3.5 mr-1" />
-              {state.analysisLoading ? "Analyzing…" : state.reviewLoading ? "Analyzing…" : "Analyse Game"}
+              {state.analysisLoading || state.reviewLoading ? "Analyzing…" : "Analyse Game"}
             </Button>
             <Button
               variant="outline"
@@ -423,79 +430,6 @@ export function GameScreen({ playerName, initialDifficulty, initialColor, onExit
             />
           </div>
 
-          {/* Coach's analysis panel (LLM-powered textual feedback) */}
-          <AnimatePresence>
-            {(state.analysisLoading || state.analysis) && (
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 10 }}
-                className="rounded-xl border border-primary/30 bg-gradient-to-br from-card to-muted/50 p-4 shadow-sm"
-              >
-                <div className="mb-2 flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Brain className="h-4 w-4 text-primary" />
-                    <span className="text-sm font-semibold text-foreground">Coach&apos;s Analysis</span>
-                  </div>
-                  {state.analysisLoading && (
-                    <span className="text-xs text-muted-foreground italic">Harmon is reviewing your game…</span>
-                  )}
-                </div>
-                {state.analysisLoading ? (
-                  <div className="space-y-2">
-                    {[0, 1, 2, 3].map((i) => (
-                      <div
-                        key={i}
-                        className="h-3 animate-pulse rounded bg-muted"
-                        style={{ width: `${90 - i * 8}%` }}
-                      />
-                    ))}
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    {state.analysis.split(/\n\n+/).filter(Boolean).map((para, i) => (
-                      <p key={i} className="text-[13px] leading-relaxed text-foreground/85">
-                        {para}
-                      </p>
-                    ))}
-                  </div>
-                )}
-                {!state.analysisLoading && state.analysis && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="mt-3 h-7 px-2 text-xs"
-                    onClick={game.requestAnalysis}
-                  >
-                    Re-run analysis
-                  </Button>
-                )}
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          {/* Review panel */}
-          <AnimatePresence>
-            {state.review && (
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 10 }}
-              >
-                <GameReview
-                  review={state.review}
-                  reviewIndex={state.reviewIndex}
-                  onChangeIndex={game.setReviewIndex}
-                  onClose={game.closeReview}
-                  onReplay={() => {
-                    game.closeReview();
-                    game.newGame({ playerColor: state.playerColor });
-                  }}
-                />
-              </motion.div>
-            )}
-          </AnimatePresence>
-
           {/* Game over banner */}
           <AnimatePresence>
             {state.gameOver && !state.review && (
@@ -524,9 +458,24 @@ export function GameScreen({ playerName, initialDifficulty, initialColor, onExit
                 <p className="text-sm font-semibold text-foreground">{state.gameResult}</p>
                 <p className="mt-1 text-xs text-muted-foreground">
                   {state.saved
-                    ? "Saved to the leaderboard. Press Review Game for analysis."
-                    : "Press Review Game for a full analysis."}
+                    ? "Saved to the leaderboard."
+                    : "Game recorded."}
                 </p>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="mt-3 h-8"
+                  onClick={() => {
+                    setAnalysisOpen(true);
+                    if (!state.review && !state.analysis && !state.reviewLoading && !state.analysisLoading) {
+                      void game.requestAnalysis();
+                    }
+                  }}
+                  disabled={state.reviewLoading || state.analysisLoading}
+                >
+                  <Flame className="h-3.5 w-3.5 mr-1" />
+                  {state.analysisLoading || state.reviewLoading ? "Analyzing…" : "View Analysis"}
+                </Button>
               </motion.div>
             )}
           </AnimatePresence>
@@ -624,6 +573,21 @@ export function GameScreen({ playerName, initialDifficulty, initialColor, onExit
 
       {/* Floating animated leaderboard */}
       <Leaderboard refreshKey={state.saved ? state.moveCount : 0} />
+
+      {/* Collapsible Analysis modal — dual layout (replay board + coaching text) */}
+      <AnalysisModal
+        open={analysisOpen}
+        onOpenChange={setAnalysisOpen}
+        review={state.review}
+        reviewLoading={state.reviewLoading}
+        analysis={state.analysis}
+        analysisLoading={state.analysisLoading}
+        reviewIndex={state.reviewIndex}
+        history={state.history}
+        playerColor={state.playerColor}
+        onChangeIndex={game.setReviewIndex}
+        onRerunAnalysis={game.requestAnalysis}
+      />
     </div>
   );
 }

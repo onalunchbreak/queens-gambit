@@ -22,9 +22,11 @@ interface GameReviewProps {
   onChangeIndex: (i: number) => void;
   onClose: () => void;
   onReplay: () => void;
+  /** Compact mode hides the slider + Prev/Next (used inside the Analysis modal). */
+  compact?: boolean;
 }
 
-export function GameReview({ review, reviewIndex, onChangeIndex, onClose, onReplay }: GameReviewProps) {
+export function GameReview({ review, reviewIndex, onChangeIndex, onClose, onReplay, compact }: GameReviewProps) {
   const total = review.annotations.length;
   const idx = Math.max(0, Math.min(reviewIndex, total));
   const annotation = idx >= 1 && idx <= total ? review.annotations[idx - 1] : null;
@@ -35,43 +37,46 @@ export function GameReview({ review, reviewIndex, onChangeIndex, onClose, onRepl
 
   return (
     <div className="flex flex-col gap-3 rounded-xl border border-border bg-card/90 p-3 shadow-sm">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Sparkles className="h-4 w-4 text-primary" />
-          <span className="text-sm font-semibold text-foreground">Post-Game Review</span>
+      {!compact && (
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Sparkles className="h-4 w-4 text-primary" />
+            <span className="text-sm font-semibold text-foreground">Post-Game Review</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <Button size="sm" variant="ghost" onClick={onReplay} className="h-7 text-xs">
+              Replay
+            </Button>
+            <Button size="sm" variant="ghost" onClick={onClose} className="h-7 w-7 p-0">
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
-        <div className="flex items-center gap-1">
-          <Button size="sm" variant="ghost" onClick={onReplay} className="h-7 text-xs">
-            Replay
-          </Button>
-          <Button size="sm" variant="ghost" onClick={onClose} className="h-7 w-7 p-0">
-            <X className="h-4 w-4" />
-          </Button>
-        </div>
-      </div>
+      )}
 
       {/* summary */}
       <p className="text-xs text-muted-foreground leading-relaxed">{review.summary}</p>
 
-      {/* slider */}
-      <div className="space-y-1.5">
-        <div className="flex items-center justify-between text-xs text-muted-foreground">
-          <span>Move {idx === 0 ? "—" : `${annotation?.san ?? ""}`}</span>
-          <span className="tabular-nums">{idx} / {total}</span>
-        </div>
-        <Slider
-          value={[idx]}
-          min={0}
-          max={total}
-          step={1}
-          onValueChange={(v) => onChangeIndex(v[0])}
-        />
-        <div className="flex items-center justify-between">
-          <Button
-            size="sm"
-            variant="outline"
-            className="h-7 px-2"
-            onClick={() => onChangeIndex(Math.max(0, idx - 1))}
+      {/* slider + controls (hidden in compact mode — the modal provides its own) */}
+      {!compact && (
+        <div className="space-y-1.5">
+          <div className="flex items-center justify-between text-xs text-muted-foreground">
+            <span>Move {idx === 0 ? "—" : `${annotation?.san ?? ""}`}</span>
+            <span className="tabular-nums">{idx} / {total}</span>
+          </div>
+          <Slider
+            value={[idx]}
+            min={0}
+            max={total}
+            step={1}
+            onValueChange={(v) => onChangeIndex(v[0])}
+          />
+          <div className="flex items-center justify-between">
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-7 px-2"
+              onClick={() => onChangeIndex(Math.max(0, idx - 1))}
             disabled={idx === 0}
           >
             <ChevronLeft className="h-3.5 w-3.5" /> Prev
@@ -87,6 +92,7 @@ export function GameReview({ review, reviewIndex, onChangeIndex, onClose, onRepl
           </Button>
         </div>
       </div>
+      )}
 
       {/* current annotation detail */}
       {annotation ? (
