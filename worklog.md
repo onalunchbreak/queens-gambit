@@ -375,3 +375,17 @@ Work Log:
 
 Stage Summary:
 - Players are now warned before making a move that would cause a stalemate draw, preventing accidental draws when they have a winning advantage. Promotion pieces are now visible in dark mode via contrasting backdrop chips. All existing functionality unchanged.
+
+---
+Task ID: 18
+Agent: main
+Task: Fix React hydration error + coach analysis reliability.
+
+Work Log:
+- React hydration error fix: EntryScreen used `resolvedTheme` from useTheme() without a `mounted` guard. During SSR, resolvedTheme is undefined, but on the client it may be "dark" (from system preference or localStorage), causing the logo image src to differ between server and client HTML → hydration mismatch. Fixed by adding a `mounted` state guard: before mount, always use light logos (index 0) to match SSR output; after mount, switch to the correct theme-based logo. Same pattern as ThemeToggle. Verified: no hydration errors on initial load or page reload, no React error overlay.
+- Coach analysis reliability: increased retry backoff from 1s/2s to 3s/5s/11s to give the LLM API rate limit (429) more time to reset. Fixed the fallback player color label: was showing "w"/"b" instead of "White"/"Black" in the heuristic fallback text. Verified: Coach's Analysis generates reliably ("Beth, you started the game with a solid 1.e4, following classical opening principles..."), analyze API returns 200 in ~4.5s.
+- Git commit: "fix: hydration error + coach analysis reliability"
+- UAT: no hydration errors, no React error overlay, coach analysis generates, no console errors. All core functionality intact.
+
+Stage Summary:
+- Hydration error fixed (mounted guard on EntryScreen). Coach analysis now reliable (longer retry backoff + fixed fallback label). All features verified working.
