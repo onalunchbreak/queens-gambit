@@ -220,3 +220,32 @@ Work Log:
 
 Stage Summary:
 - Captured trays are now responsive (fixed height, horizontal scroll, no overflow). Analysis opens in a collapsible dual-layout modal with a full move-by-move replay board (Prev/Play/Next + markers/arrows) alongside the LLM coaching text — no more scrolling past the board to reach the analysis.
+
+---
+Task ID: 11
+Agent: main
+Task: Layout redesign — compact navbar, 3-column layout, fix modal responsiveness, UAT.
+
+Work Log:
+- Compact navbar: reduced to a single sticky row holding brand+match (left), Influence toggle + difficulty pills (center), theme/sound/exit (right). Added DifficultySelectorCompact (small pill buttons with pips, label hidden on <sm). Influence toggle moved into navbar with its tooltip preserved.
+- 3-column main layout (xl screens): LEFT panel (Harmon's last move/thinking + move history + game controls + game-over banner), CENTER (board + captured trays), RIGHT (eval bar + turn indicator/quick stats). On mobile/tablet it stacks: board first, then left panel, then right panel. Eliminated the long vertical scroll — page now fits in ~604px vs 577px viewport (27px overflow vs hundreds before).
+- Moved "Harmon's last move" section from right side to LEFT of the board (utilizing empty space). Game controls (New/Undo/Analyse/Resign) moved into the left panel below move history (no longer below the board).
+- Difficulty selector: compact pills in navbar on sm+, full card selector shown in right panel only on mobile (<sm).
+- Analysis modal responsiveness fix: body now uses overflow-y-auto on mobile (single scrollable column) and md:overflow-hidden with dual panes (each scrolls independently) on desktop. Reduced header padding, made title truncate, moves badge hidden on mobile. VLM-confirmed: dual layout on desktop, vertical stack on mobile, no conflicts.
+- Dark/light contrast audit: VLM-confirmed all surfaces (navbar, board, side panels, eval bar, difficulty pills, influence toggle) have strong contrast in both modes. Added dark: variants for game-over banner crown colors and resign hover.
+- UAT (PM-style, every feature in both themes):
+  1. Entry screen (light): name input, color selector (White/Black/Random), difficulty, Begin button — all present.
+  2. Game layout (light): 3-column, navbar with Level pills + Influence, no wasted space, minimal scroll. VLM-confirmed.
+  3. Dark mode: full contrast verified — navbar, board, pieces, side panels, pills, toggle all readable. VLM-confirmed.
+  4. Move + AI response: e4 → Na6, Harmon's last move shows in LEFT panel with LLM narration.
+  5. Influence toggle: heatmap renders, toggles off.
+  6. Difficulty change: Club Player pill activates.
+  7. Analyse modal (desktop): opens, dual layout, replay controls (70 buttons), Coach's Analysis LLM text loads. VLM-confirmed.
+  8. Analyse modal (mobile): stacks vertically, scrollable, no conflicts. VLM-confirmed.
+  9. Resign flow: dialog → confirm → "Black wins by resignation" + "Harmon Wins" confetti banner.
+  10. Leaderboard: opens, shows 2 games, Top Players + Recent Games tabs.
+  11. Mobile game layout: stacks reasonably, navbar compact, no overflow. VLM-confirmed.
+- No console/runtime errors, lint clean, DB queries working. Cleaned test records.
+
+Stage Summary:
+- Navbar is now compact and utilized (difficulty pills + influence toggle inline). 3-column layout eliminates wasted space and long scroll. Harmon's last move moved to left of board. Analysis modal is fully responsive (dual-pane desktop, stacked scrollable mobile). Dark/light contrast verified across all surfaces. Full UAT passed for every feature in both themes.

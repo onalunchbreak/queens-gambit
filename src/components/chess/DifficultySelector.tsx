@@ -64,3 +64,50 @@ export function DifficultySelector({ value, onChange, disabled }: DifficultySele
     </div>
   );
 }
+
+// Compact inline variant for the navbar — small pill buttons with pips.
+export function DifficultySelectorCompact({
+  value,
+  onChange,
+  disabled,
+}: DifficultySelectorProps) {
+  return (
+    <div className="flex items-center gap-1">
+      {DIFFICULTIES.map((d) => {
+        const active = value === d.id;
+        const pips = PIP_COUNT[d.id];
+        return (
+          <button
+            key={d.id}
+            type="button"
+            disabled={disabled}
+            onClick={() => onChange(d.id)}
+            aria-pressed={active}
+            title={`${d.label} (${d.elo})`}
+            className={cn(
+              "flex items-center gap-1 rounded-md border px-2 py-1 text-[11px] font-medium transition-all",
+              active
+                ? "border-primary bg-primary/10 text-primary"
+                : "border-border text-muted-foreground hover:text-foreground hover:border-muted-foreground/40",
+              disabled && "cursor-not-allowed opacity-50",
+            )}
+          >
+            <span className="flex items-end gap-[1px] h-2.5" aria-hidden>
+              {Array.from({ length: 3 }).map((_, i) => (
+                <span
+                  key={i}
+                  className={cn(
+                    "w-[2px] rounded-sm",
+                    i < pips ? "bg-primary" : "bg-muted-foreground/30",
+                  )}
+                  style={{ height: `${4 + i * 2}px` }}
+                />
+              ))}
+            </span>
+            <span className="hidden sm:inline">{d.label}</span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}

@@ -96,21 +96,21 @@ export function AnalysisModal({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-[min(96vw,1100px)] max-h-[92vh] gap-0 overflow-hidden p-0 sm:rounded-2xl">
-        <DialogHeader className="border-b border-border bg-gradient-to-r from-card to-muted/50 px-5 py-3">
-          <div className="flex items-center justify-between gap-3 pr-6">
-            <div className="flex items-center gap-2">
-              <Brain className="h-5 w-5 text-primary" />
-              <DialogTitle className="font-serif text-lg font-semibold text-foreground">
+        <DialogHeader className="border-b border-border bg-gradient-to-r from-card to-muted/50 px-4 py-2.5 shrink-0">
+          <div className="flex items-center justify-between gap-2 pr-6">
+            <div className="flex items-center gap-2 min-w-0">
+              <Brain className="h-5 w-5 text-primary shrink-0" />
+              <DialogTitle className="font-serif text-base sm:text-lg font-semibold text-foreground truncate">
                 Game Analysis
               </DialogTitle>
               {review && (
-                <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
+                <span className="hidden sm:inline rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary shrink-0">
                   {total} moves
                 </span>
               )}
             </div>
             {reviewLoading && (
-              <span className="text-xs text-muted-foreground italic">Computing review…</span>
+              <span className="text-xs text-muted-foreground italic shrink-0">Computing…</span>
             )}
           </div>
           <DialogDescription className="sr-only">
@@ -118,10 +118,10 @@ export function AnalysisModal({
           </DialogDescription>
         </DialogHeader>
 
-        {/* Dual-layout body: board (left) + analysis (right); stacks on mobile */}
-        <div className="flex max-h-[calc(92vh-64px)] flex-col md:flex-row">
+        {/* Body: scrolls on mobile, dual-pane on desktop */}
+        <div className="flex max-h-[calc(92vh-52px)] flex-col overflow-y-auto md:flex-row md:overflow-hidden">
           {/* Left: replay board + controls */}
-          <div className="flex flex-col gap-3 p-4 md:w-[52%] md:border-r md:border-border">
+          <div className="flex flex-col gap-2 p-3 md:w-[54%] md:shrink-0 md:overflow-y-auto md:border-r md:border-border">
             <div className="relative">
               {reviewPos ? (
                 <ChessBoard
@@ -248,7 +248,7 @@ export function AnalysisModal({
           </div>
 
           {/* Right: coach's analysis + move list */}
-          <div className="flex flex-col gap-3 p-4 md:w-[48%] md:overflow-y-auto">
+          <div className="flex flex-col gap-3 p-3 md:w-[46%] md:overflow-y-auto">
             {/* Coach's analysis (LLM) */}
             <div className="rounded-xl border border-primary/30 bg-gradient-to-br from-card to-muted/40 p-4 shadow-sm">
               <div className="mb-2 flex items-center justify-between">

@@ -27,7 +27,7 @@ import {
 import { ChessBoard } from "./ChessBoard";
 import { EvalBar } from "./EvalBar";
 import { MoveHistory } from "./MoveHistory";
-import { DifficultySelector } from "./DifficultySelector";
+import { DifficultySelector, DifficultySelectorCompact } from "./DifficultySelector";
 import { ThinkingIndicator } from "./ThinkingIndicator";
 import { GameReview } from "./GameReview";
 import { Confetti } from "./Confetti";
@@ -150,28 +150,65 @@ export function GameScreen({ playerName, initialDifficulty, initialColor, onExit
       className="relative min-h-screen flex flex-col"
       onClick={resumeAudio}
     >
-      {/* Header */}
-      <header className="border-b border-border bg-card/80 backdrop-blur">
-        <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-3 px-4 py-3">
-          <div className="flex items-center gap-3 min-w-0">
+      {/* ─────────── Compact Navbar ─────────── */}
+      <header className="border-b border-border bg-card/80 backdrop-blur sticky top-0 z-30">
+        <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-2 px-3 py-2">
+          {/* Brand + match */}
+          <div className="flex items-center gap-2 min-w-0">
             <span
-              className="hidden sm:flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-primary/40 bg-gradient-to-br from-card to-muted"
-              style={{ fontFamily: FONT_STACK, fontSize: 20, color: "var(--primary)", lineHeight: 1 }}
+              className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-primary/40 bg-gradient-to-br from-card to-muted"
+              style={{ fontFamily: FONT_STACK, fontSize: 16, color: "var(--primary)", lineHeight: 1 }}
             >
               {"\u265E"}
             </span>
-            <div className="min-w-0">
-              <h1 className="font-serif text-lg sm:text-xl font-semibold text-foreground truncate">
+            <div className="min-w-0 hidden sm:block">
+              <h1 className="font-serif text-sm font-semibold leading-tight text-foreground truncate">
                 Harmon&apos;s Gambit
               </h1>
-              <p className="text-xs sm:text-xs text-muted-foreground truncate">
+              <p className="text-[11px] text-muted-foreground truncate leading-tight">
                 <span className="font-medium text-foreground">{playerName}</span>
-                <span className="mx-1.5 text-primary/70">vs.</span>
-                <span className="font-medium text-foreground">Harmon AI</span>
+                <span className="mx-1 text-primary/70">vs.</span>
+                <span className="font-medium text-foreground">AI</span>
               </p>
             </div>
           </div>
+
+          {/* Center: difficulty pills + influence toggle (utilizes navbar space) */}
           <div className="flex items-center gap-2">
+            <TooltipProvider delayDuration={150}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="flex items-center gap-1.5 rounded-md border border-border bg-background/60 px-2 py-1">
+                    <LayoutGrid className="h-3.5 w-3.5 text-primary/70" />
+                    <span className="hidden md:inline text-[11px] font-medium text-muted-foreground">Influence</span>
+                    <Switch
+                      checked={state.showHeatmap}
+                      onCheckedChange={game.setShowHeatmap}
+                      aria-label="Toggle influence heatmap"
+                      className="scale-90"
+                    />
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent side="bottom" className="max-w-[240px] text-xs leading-relaxed">
+                  <p className="font-semibold mb-1">Influence Heatmap</p>
+                  <p>Toggles a colour overlay on every square showing which side <em>controls</em> it — based on attacking pieces and their reach.</p>
+                  <p className="mt-1"><span className="text-amber-700 dark:text-amber-300 font-medium">Warm cream tones</span> = White-controlled. <span className="text-stone-700 dark:text-stone-300 font-medium">Deep umber tones</span> = Black-controlled.</p>
+                  <p className="mt-1 text-muted-foreground">Spot weak squares, hanging pieces, and centre control at a glance.</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+
+            <div className="hidden sm:flex items-center gap-1.5">
+              <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Level</span>
+              <DifficultySelectorCompact
+                value={state.difficulty}
+                onChange={game.setDifficulty}
+              />
+            </div>
+          </div>
+
+          {/* Right: actions */}
+          <div className="flex items-center gap-1">
             <ThemeToggle />
             <Button
               variant="ghost"
@@ -183,164 +220,17 @@ export function GameScreen({ playerName, initialDifficulty, initialColor, onExit
               {soundOn ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
             </Button>
             <Button variant="outline" size="sm" className="h-8" onClick={onExit}>
-              <RotateCcw className="h-3.5 w-3.5 mr-1" /> Exit
+              <RotateCcw className="h-3.5 w-3.5 mr-1" /> <span className="hidden sm:inline">Exit</span>
             </Button>
           </div>
         </div>
       </header>
 
-      {/* Main */}
-      <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-5 px-4 py-5 lg:flex-row lg:items-start">
-        {/* Board column */}
-        <div className="flex flex-col items-center gap-3 lg:flex-1">
-          <div className="w-full max-w-[560px]">
-            {/* Top tray: pieces captured BY the player at the bottom (i.e. AI's color). */}
-            <div className="mb-2 flex justify-between gap-2">
-              <CapturedTray
-                capturedBy={state.playerColor}
-                captured={state.captured}
-                label={state.playerColor === "w" ? "You captured" : "You captured"}
-                align="left"
-              />
-              <CapturedTray
-                capturedBy={state.aiColor}
-                captured={state.captured}
-                label="AI captured"
-                align="right"
-              />
-            </div>
-
-            {/* Board + fly-off overlay wrapper */}
-            <div ref={boardWrapRef} className="relative">
-              <ChessBoard
-                pieces={boardPieces}
-                lastMove={boardLastMove}
-                selected={state.selected}
-                legalTargets={state.legalTargets}
-                heatmap={state.heatmap}
-                showHeatmap={state.showHeatmap}
-                turn={state.turn}
-                inCheck={reviewActive ? false : liveCheck.inCheck}
-                checkSquare={reviewActive ? null : liveCheck.checkSquare}
-                onSquareClick={game.selectSquare}
-                moveNonce={state.moveCount}
-                reviewActive={reviewActive}
-                reviewMarker={reviewActive && reviewPos?.marker ? reviewPos.marker : null}
-                reviewArrow={reviewActive && reviewPos?.arrow ? reviewPos.arrow : null}
-                interactive={boardInteractive}
-                animateMoves={!reviewActive}
-                orientation={state.playerColor}
-              />
-              {/* Fly-off overlay: the captured piece animates off the board */}
-              {!reviewActive && (
-                <CaptureFlyOff
-                  capture={state.lastCapture}
-                  boardRect={boardRect}
-                  orientation={state.playerColor}
-                />
-              )}
-            </div>
-          </div>
-
-          {/* below-board controls (mobile shows these too) */}
-          <div className="flex w-full max-w-[560px] flex-wrap items-center justify-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-8"
-              onClick={() => game.newGame({ playerColor: state.playerColor })}
-              disabled={state.isAiThinking}
-            >
-              <RotateCcw className="h-3.5 w-3.5 mr-1" /> New Game
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-8"
-              onClick={game.undo}
-              disabled={state.isAiThinking || state.history.length < 2}
-            >
-              <RotateCcw className="h-3.5 w-3.5 mr-1" /> Undo
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-8"
-              onClick={() => {
-                setAnalysisOpen(true);
-                if (!state.review && !state.analysis && !state.reviewLoading && !state.analysisLoading) {
-                  void game.requestAnalysis();
-                }
-              }}
-              disabled={state.isAiThinking || state.history.length === 0}
-            >
-              <Flame className="h-3.5 w-3.5 mr-1" />
-              {state.analysisLoading || state.reviewLoading ? "Analyzing…" : "Analyse Game"}
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-8 border-rose-400/60 text-rose-700 hover:bg-rose-50"
-              onClick={() => setConfirmResign(true)}
-              disabled={state.isAiThinking || state.gameOver}
-            >
-              <Flag className="h-3.5 w-3.5 mr-1" /> Resign
-            </Button>
-          </div>
-        </div>
-
-        {/* Side panel */}
-        <aside className="w-full lg:w-[340px] shrink-0 space-y-3">
-          {/* Eval + heatmap row */}
-          <div className="rounded-xl border border-border bg-card/80 p-3 shadow-sm">
-            <div className="flex items-center gap-3">
-              <EvalBar
-                prob={state.evalProb}
-                evalCp={state.evaluation}
-                label={state.evalLabel}
-                gameOver={state.gameOver}
-                playerColor={state.playerColor}
-              />
-              <div className="flex-1">
-                <div className="flex items-center justify-between">
-                  <TooltipProvider delayDuration={150}>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <button
-                          type="button"
-                          className="flex items-center gap-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors cursor-help"
-                        >
-                          Influence
-                          <Info className="h-3 w-3 text-primary/60" />
-                        </button>
-                      </TooltipTrigger>
-                      <TooltipContent side="bottom" className="max-w-[240px] text-xs leading-relaxed">
-                        <p className="font-semibold mb-1">Influence Heatmap</p>
-                        <p>Toggles a colour overlay on every square showing which side <em>controls</em> it — based on attacking pieces and their reach.</p>
-                        <p className="mt-1"><span className="text-amber-700 dark:text-amber-300 font-medium">Warm cream tones</span> = White-controlled squares. <span className="text-stone-700 dark:text-stone-300 font-medium">Deep umber tones</span> = Black-controlled squares.</p>
-                        <p className="mt-1 text-muted-foreground">Use it to spot weak squares, hanging pieces, and who owns the centre at a glance.</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                  <div className="flex items-center gap-1.5">
-                    <LayoutGrid className="h-3.5 w-3.5 text-primary/70" />
-                    <Switch
-                      checked={state.showHeatmap}
-                      onCheckedChange={game.setShowHeatmap}
-                      aria-label="Toggle influence heatmap"
-                    />
-                  </div>
-                </div>
-                <p className="mt-1 text-xs leading-snug text-muted-foreground">
-                  {state.showHeatmap
-                    ? "Warm tones = White control, umber tones = Black control."
-                    : "Toggle to see which side controls each square."}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Thinking or explanation */}
+      {/* ─────────── Main: 3-column layout (left info | board | right eval) ─────────── */}
+      <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-3 px-3 py-3 xl:flex-row xl:items-stretch xl:gap-4">
+        {/* LEFT panel: Harmon's last move + move history (utilizes the empty left space) */}
+        <aside className="order-2 flex flex-col gap-3 xl:order-1 xl:w-[260px] shrink-0">
+          {/* Harmon's last move / thinking */}
           <div className="rounded-xl border border-border bg-card/80 p-3 shadow-sm">
             <AnimatePresence mode="wait">
               {state.isAiThinking ? (
@@ -404,7 +294,7 @@ export function GameScreen({ playerName, initialDifficulty, initialColor, onExit
           </div>
 
           {/* Move history */}
-          <div className="rounded-xl border border-border bg-card/80 p-3 shadow-sm">
+          <div className="rounded-xl border border-border bg-card/80 p-3 shadow-sm flex-1 min-h-0">
             <MoveHistory
               sans={state.history}
               reviewActive={reviewActive}
@@ -413,24 +303,53 @@ export function GameScreen({ playerName, initialDifficulty, initialColor, onExit
             />
           </div>
 
-          {/* Difficulty */}
-          <div className="rounded-xl border border-border bg-card/80 p-3 shadow-sm">
-            <div className="mb-2 flex items-center justify-between">
-              <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Opponent level
-              </span>
-              {state.isAiThinking && (
-                <span className="text-xs text-muted-foreground">applies next move</span>
-              )}
-            </div>
-            <DifficultySelector
-              value={state.difficulty}
-              onChange={game.setDifficulty}
-              disabled={false}
-            />
+          {/* Game controls (moved here from below the board to save vertical space) */}
+          <div className="flex flex-wrap items-center gap-1.5">
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8"
+              onClick={() => game.newGame({ playerColor: state.playerColor })}
+              disabled={state.isAiThinking}
+            >
+              <RotateCcw className="h-3.5 w-3.5 mr-1" /> New
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8"
+              onClick={game.undo}
+              disabled={state.isAiThinking || state.history.length < 2}
+            >
+              <RotateCcw className="h-3.5 w-3.5 mr-1" /> Undo
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8"
+              onClick={() => {
+                setAnalysisOpen(true);
+                if (!state.review && !state.analysis && !state.reviewLoading && !state.analysisLoading) {
+                  void game.requestAnalysis();
+                }
+              }}
+              disabled={state.isAiThinking || state.history.length === 0}
+            >
+              <Flame className="h-3.5 w-3.5 mr-1" />
+              {state.analysisLoading || state.reviewLoading ? "Analyzing…" : "Analyse"}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8 border-rose-400/60 text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/30"
+              onClick={() => setConfirmResign(true)}
+              disabled={state.isAiThinking || state.gameOver}
+            >
+              <Flag className="h-3.5 w-3.5 mr-1" /> Resign
+            </Button>
           </div>
 
-          {/* Game over banner */}
+          {/* Game over banner (in left panel when game ends) */}
           <AnimatePresence>
             {state.gameOver && !state.review && (
               <motion.div
@@ -439,32 +358,30 @@ export function GameScreen({ playerName, initialDifficulty, initialColor, onExit
                 exit={{ opacity: 0 }}
                 className={
                   state.winner === "player"
-                    ? "rounded-xl border border-emerald-500/40 bg-gradient-to-br from-emerald-500/10 to-card p-4 text-center shadow-md"
+                    ? "rounded-xl border border-emerald-500/40 bg-gradient-to-br from-emerald-500/10 to-card p-3 text-center shadow-md"
                     : state.winner === "ai"
-                      ? "rounded-xl border border-rose-400/40 bg-gradient-to-br from-rose-500/10 to-card p-4 text-center shadow-md"
-                      : "rounded-xl border border-primary/30 bg-gradient-to-br from-card to-muted p-4 text-center shadow-md"
+                      ? "rounded-xl border border-rose-400/40 bg-gradient-to-br from-rose-500/10 to-card p-3 text-center shadow-md"
+                      : "rounded-xl border border-primary/30 bg-gradient-to-br from-card to-muted p-3 text-center shadow-md"
                 }
               >
                 <Crown
                   className={
                     "mx-auto mb-1 h-5 w-5 " +
                     (state.winner === "player"
-                      ? "text-emerald-600"
+                      ? "text-emerald-600 dark:text-emerald-400"
                       : state.winner === "ai"
-                        ? "text-rose-600"
+                        ? "text-rose-600 dark:text-rose-400"
                         : "text-primary")
                   }
                 />
                 <p className="text-sm font-semibold text-foreground">{state.gameResult}</p>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  {state.saved
-                    ? "Saved to the leaderboard."
-                    : "Game recorded."}
+                <p className="mt-0.5 text-xs text-muted-foreground">
+                  {state.saved ? "Saved to the leaderboard." : "Game recorded."}
                 </p>
                 <Button
                   size="sm"
                   variant="outline"
-                  className="mt-3 h-8"
+                  className="mt-2 h-8"
                   onClick={() => {
                     setAnalysisOpen(true);
                     if (!state.review && !state.analysis && !state.reviewLoading && !state.analysisLoading) {
@@ -480,12 +397,113 @@ export function GameScreen({ playerName, initialDifficulty, initialColor, onExit
             )}
           </AnimatePresence>
         </aside>
+
+        {/* CENTER: board + captured trays */}
+        <div className="order-1 flex flex-col items-center gap-2 xl:order-2 xl:flex-1 xl:justify-start">
+          <div className="w-full max-w-[min(560px,calc(100vh-140px))]">
+            {/* Captured trays */}
+            <div className="mb-2 flex justify-between gap-2">
+              <CapturedTray
+                capturedBy={state.playerColor}
+                captured={state.captured}
+                label="You captured"
+                align="left"
+              />
+              <CapturedTray
+                capturedBy={state.aiColor}
+                captured={state.captured}
+                label="AI captured"
+                align="right"
+              />
+            </div>
+
+            {/* Board + fly-off overlay */}
+            <div ref={boardWrapRef} className="relative">
+              <ChessBoard
+                pieces={boardPieces}
+                lastMove={boardLastMove}
+                selected={state.selected}
+                legalTargets={state.legalTargets}
+                heatmap={state.heatmap}
+                showHeatmap={state.showHeatmap}
+                turn={state.turn}
+                inCheck={reviewActive ? false : liveCheck.inCheck}
+                checkSquare={reviewActive ? null : liveCheck.checkSquare}
+                onSquareClick={game.selectSquare}
+                moveNonce={state.moveCount}
+                reviewActive={reviewActive}
+                reviewMarker={reviewActive && reviewPos?.marker ? reviewPos.marker : null}
+                reviewArrow={reviewActive && reviewPos?.arrow ? reviewPos.arrow : null}
+                interactive={boardInteractive}
+                animateMoves={!reviewActive}
+                orientation={state.playerColor}
+              />
+              {!reviewActive && (
+                <CaptureFlyOff
+                  capture={state.lastCapture}
+                  boardRect={boardRect}
+                  orientation={state.playerColor}
+                />
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* RIGHT panel: eval bar + status (utilizes the right space, compact) */}
+        <aside className="order-3 flex flex-col gap-3 xl:w-[240px] shrink-0">
+          <div className="rounded-xl border border-border bg-card/80 p-3 shadow-sm">
+            <EvalBar
+              prob={state.evalProb}
+              evalCp={state.evaluation}
+              label={state.evalLabel}
+              gameOver={state.gameOver}
+              playerColor={state.playerColor}
+            />
+          </div>
+
+          {/* Difficulty (full selector, shown here on mobile only; compact is in navbar on sm+) */}
+          <div className="rounded-xl border border-border bg-card/80 p-3 shadow-sm sm:hidden">
+            <div className="mb-2 flex items-center justify-between">
+              <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Opponent level
+              </span>
+            </div>
+            <DifficultySelector
+              value={state.difficulty}
+              onChange={game.setDifficulty}
+              disabled={false}
+            />
+          </div>
+
+          {/* Turn indicator / quick stats */}
+          <div className="rounded-xl border border-border bg-card/80 p-3 shadow-sm">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Turn
+              </span>
+              <span
+                className={
+                  "rounded-full px-2 py-0.5 text-xs font-semibold " +
+                  (state.turn === state.playerColor
+                    ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400"
+                    : "bg-amber-500/15 text-amber-700 dark:text-amber-400")
+                }
+              >
+                {state.turn === state.playerColor ? "Your move" : "Harmon thinking"}
+              </span>
+            </div>
+            <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground">
+              <span>Move <span className="font-semibold text-foreground tabular-nums">{Math.floor(state.history.length / 2) + 1}</span></span>
+              <span><span className="font-semibold text-foreground tabular-nums">{state.history.length}</span> ply</span>
+            </div>
+          </div>
+        </aside>
       </main>
 
       {/* Footer */}
       <footer className="mt-auto border-t border-border bg-card/70">
-        <div className="mx-auto w-full max-w-6xl px-4 py-3 text-center text-xs text-muted-foreground">
-          Harmon&apos;s Gambit &mdash; a study in calculation. AlphaZero meets the World Chess Championship.
+        <div className="mx-auto w-full max-w-7xl px-4 py-2 text-center text-[11px] text-muted-foreground">
+          Harmon&apos;s Gambit &mdash; AlphaZero meets the World Chess Championship.
         </div>
       </footer>
 
@@ -574,7 +592,7 @@ export function GameScreen({ playerName, initialDifficulty, initialColor, onExit
       {/* Floating animated leaderboard */}
       <Leaderboard refreshKey={state.saved ? state.moveCount : 0} />
 
-      {/* Collapsible Analysis modal — dual layout (replay board + coaching text) */}
+      {/* Collapsible Analysis modal */}
       <AnalysisModal
         open={analysisOpen}
         onOpenChange={setAnalysisOpen}
