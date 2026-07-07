@@ -58,7 +58,7 @@ src/
 ├── app/
 │   ├── api/
 │   │   ├── ai-move/        # Computes the AI's move (minimax + alpha-beta)
-│   │   ├── analyze/        # LLM coaching analysis of a finished game
+│   │   ├── analyze/        # LLM coaching analysis (retry + heuristic fallback)
 │   │   ├── leaderboard/    # Aggregated player stats + recent games
 │   │   ├── narrate/        # LLM Beth-Harmon-voice move narration
 │   │   ├── review/         # Per-move annotations (Brilliant/Blunder/etc.)
@@ -74,12 +74,16 @@ src/
 │   │   ├── ChessPiece.tsx          # Staunton glyphs with gloss + lift animation
 │   │   ├── Confetti.tsx            # Themed confetti + result banner
 │   │   ├── DifficultySelector.tsx  # Rank-pip pills (navbar + full variants)
-│   │   ├── EntryScreen.tsx         # Name + color + difficulty picker
+│   │   ├── EntryScreen.tsx         # Name + color + difficulty picker + themed logos
 │   │   ├── EvalBar.tsx             # Real-time evaluation bar
+│   │   ├── GameDialogs.tsx         # Promotion picker + resign confirmation
+│   │   ├── GameNavbar.tsx          # Compact sticky navbar (brand, pills, toggle)
 │   │   ├── GameReview.tsx          # Move-by-move annotation panel
-│   │   ├── GameScreen.tsx          # Main 3-column game layout
+│   │   ├── GameScreen.tsx          # Orchestrator: composes navbar + panels + board
 │   │   ├── Leaderboard.tsx         # Floating animated leaderboard
+│   │   ├── LeftPanel.tsx           # Harmon's last move + history + controls + banner
 │   │   ├── MoveHistory.tsx         # Scrollable SAN move list
+│   │   ├── RightPanel.tsx          # Eval bar + turn indicator + mobile difficulty
 │   │   ├── ThinkingIndicator.tsx   # Orbiting-pieces spinner
 │   │   ├── review-util.ts          # Replay position reconstruction
 │   │   ├── sounds.ts               # Web Audio synthesized move/thunk sounds
@@ -96,6 +100,8 @@ src/
 └── lib/
     └── db.ts                # Prisma client singleton
 ```
+
+**Architecture notes:** The `GameScreen` is intentionally lean — it delegates rendering to focused single-responsibility components (`GameNavbar`, `LeftPanel`, `RightPanel`, `GameDialogs`) and only handles state orchestration, derived values (check detection, review positions), and the auto-analysis effect. The `useChessGame` hook owns all game logic and state, keeping the UI components presentational.
 
 ### Getting Started
 
@@ -138,7 +144,18 @@ The analysis **auto-generates** when the game ends, so it's ready by the time yo
 
 ## 📦 Version History
 
-### v1.5.0 (Current) — Layout Polish & Turn-Indicator Fix
+### v1.6.0 (Current) — Code Refactor, Bug Fixes & Analysis Reliability
+- **Fixed React infinite-loop error**: the auto-analysis effect depended on the `game` object (recreated each render), causing a re-render loop and the Next.js error overlay. Now uses a ref-guarded pattern with `autoAnalysisRanRef` to fire exactly once per game.
+- **Fixed missing Coach's Analysis**: the `/api/analyze` endpoint now retries up to 3 times on rate-limit (429) errors with exponential backoff, and has a richer heuristic fallback that references the player's specific worst move, brilliant moves, and the game result — so the analysis panel is never empty.
+- **Code refactor (professional structure)**: split the 625-line `GameScreen` into focused single-responsibility components:
+  - `GameNavbar` — sticky navbar (brand, influence toggle, difficulty pills, actions)
+  - `LeftPanel` — Harmon's last move, move history, game controls, game-over banner
+  - `RightPanel` — eval bar, turn indicator, mobile difficulty selector
+  - `GameDialogs` — promotion picker + resign confirmation
+  - `GameScreen` is now a lean orchestrator (~230 lines) that composes these
+- **README updated** with the new file structure and architecture notes
+
+### v1.5.0 — Layout Polish & Turn-Indicator Fix
 - **Reverted board size** to a larger 620px max-width (was inadvertently shrunk to 580px)
 - **Fixed turn indicator bug**: now correctly shows "Harmon thinking" whenever the AI is computing (checks `isAiThinking` in addition to turn color, fixing the race condition where the indicator showed "Your move" during AI computation)
 - **Captured trays enlarged**: chips increased to 32px (from 24px), tray height to 48px, glyphs to 20px — pieces are now clearly readable

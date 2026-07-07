@@ -52,6 +52,7 @@ export async function POST(req: NextRequest) {
     const blunders = annotations.filter((a) => a.kind === "blunder");
     const mistakes = annotations.filter((a) => a.kind === "mistake");
     const brilliants = annotations.filter((a) => a.kind === "brilliant");
+    const inaccuracies = annotations.filter((a) => a.kind === "inaccuracy");
     const playerErrors = annotations.filter(
       (a) => a.byColor === (body.playerColor || "w") && (a.kind === "blunder" || a.kind === "mistake" || a.kind === "inaccuracy"),
     );
@@ -84,24 +85,58 @@ export async function POST(req: NextRequest) {
       `If the player lost or drew, mention the critical missed chance.`;
 
     let analysis = "";
-    try {
-      const completion = await zai.chat.completions.create({
-        messages: [
-          { role: "assistant", content: system },
-          { role: "user", content: user },
-        ],
-        thinking: { type: "disabled" },
-      });
-      analysis = (completion.choices[0]?.message?.content ?? "").trim();
-    } catch (e) {
-      analysis = "";
+    // Retry up to 3 times on rate-limit (429) or transient errors.
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      try {
+        const completion = await zai.chat.completions.create({
+          messages: [
+            { role: "assistant", content: system },
+            { role: "user", content: user },
+          ],
+          thinking: { type: "disabled" },
+        });
+        analysis = (completion.choices[0]?.message?.content ?? "").trim();
+        if (analysis) break;
+      } catch (e) {
+        // Wait before retry (exponential backoff): 1s, 2s, 4s.
+        if (attempt < 3) {
+          await new Promise((r) => setTimeout(r, 1000 * attempt));
+        }
+      }
     }
 
+    // If the LLM failed after retries, build a richer heuristic fallback that
+    // still references the player's specific mistakes and the game result.
     if (!analysis) {
-      analysis =
-        `${playerName}, this game featured ${brilliants.length} brilliant move(s), ${mistakes.length} mistake(s), and ${blunders.length} blunder(s). ` +
-        `The key moments are marked on the board — review the highlighted squares to see where the evaluation shifted most. ` +
-        `Focus on the positions where the engine's suggested move differs from what was played.`;
+      const playerSide = playerColor;
+      const parts: string[] = [];
+      parts.push(
+        `${playerName}, your game as ${playerSide} ended with: ${result}.`,
+      );
+      if (brilliants.length > 0) {
+        parts.push(
+          `You played ${brilliants.length} brilliant move${brilliants.length > 1 ? "s" : ""} — these are marked in emerald on the replay board and represent your strongest moments.`,
+        );
+      }
+      if (playerErrors.length > 0) {
+        const worst = playerErrors
+          .slice()
+          .sort((a, b) => {
+            const da = (a.evalAfter - a.evalBefore) * (a.byColor === "w" ? 1 : -1);
+            const db = (b.evalAfter - b.evalBefore) * (b.byColor === "w" ? 1 : -1);
+            return da - db;
+          })[0];
+        parts.push(
+          `Your most costly moment was move ${worst.ply} (${worst.san}), marked as a ${worst.label.toLowerCase()}. The engine preferred ${worst.bestMoveSan ?? "a different move"} there.`,
+        );
+      }
+      if (mistakes.length === 0 && blunders.length === 0 && inaccuracies.length === 0) {
+        parts.push("You played a clean game with no significant errors — a disciplined performance.");
+      }
+      parts.push(
+        `Step through the replay with the Prev/Next buttons to review each move, and focus on the positions where the evaluation bar shifted most.`,
+      );
+      analysis = parts.join(" ");
     }
 
     // Hard safety cap.
