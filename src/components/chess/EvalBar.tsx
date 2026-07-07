@@ -42,7 +42,7 @@ export function EvalBar({ prob, evalCp, label, gameOver, playerColor = "w" }: Ev
         <div className="absolute left-0 right-0 top-1/2 h-px bg-foreground/30" />
         {/* eval text */}
         <div
-          className="absolute left-0 right-0 text-center text-[10px] font-bold tracking-tight"
+          className="absolute left-0 right-0 text-center text-xs font-bold tracking-tight"
           style={{
             top: whitePct > 50 ? "6px" : "auto",
             bottom: whitePct > 50 ? "auto" : "6px",
@@ -57,21 +57,21 @@ export function EvalBar({ prob, evalCp, label, gameOver, playerColor = "w" }: Ev
             so the top of the visual bar = White when White is winning). We label the two
             ends by color + who plays them. */}
         <div>
-          <div className="font-semibold text-[11px] uppercase tracking-wider text-amber-700/80 dark:text-amber-400/80">
+          <div className="font-semibold text-xs uppercase tracking-wider text-amber-700/80 dark:text-amber-400/80">
             Black
           </div>
-          <div className="text-[11px] text-muted-foreground">
+          <div className="text-xs text-muted-foreground">
             {playerColor === "b" ? (gameOver ? "Done" : "You") : "Harmon AI"}
           </div>
         </div>
         <div className="text-center">
-          <div className="font-medium text-[11px] leading-tight text-foreground/80">{label}</div>
+          <div className="font-medium text-xs leading-tight text-foreground/80">{label}</div>
         </div>
         <div className="text-right">
-          <div className="font-semibold text-[11px] uppercase tracking-wider text-emerald-700/80 dark:text-emerald-400/80">
+          <div className="font-semibold text-xs uppercase tracking-wider text-emerald-700/80 dark:text-emerald-400/80">
             White
           </div>
-          <div className="text-[11px] text-muted-foreground">
+          <div className="text-xs text-muted-foreground">
             {playerColor === "w" ? (gameOver ? "Done" : "You") : "Harmon AI"}
           </div>
         </div>

@@ -124,7 +124,7 @@ export function EntryScreen({ onStart }: EntryScreenProps) {
           </Button>
         </div>
 
-        <p className="mt-4 text-center text-[11px] text-muted-foreground">
+        <p className="mt-4 text-center text-xs text-muted-foreground">
           {colorChoice === "w"
             ? "You play White against the Harmon engine."
             : colorChoice === "b"
@@ -133,7 +133,7 @@ export function EntryScreen({ onStart }: EntryScreenProps) {
         </p>
       </motion.div>
 
-      <footer className="mt-auto py-3 text-center text-[11px] text-muted-foreground">
+      <footer className="mt-auto py-3 text-center text-xs text-muted-foreground">
         Harmon&apos;s Gambit &mdash; AlphaZero meets the World Chess Championship.
       </footer>
     </div>
@@ -193,7 +193,7 @@ function ColorSelector({
             <span className="text-[12.5px] font-semibold leading-tight text-card-foreground">
               {o.label}
             </span>
-            <span className="text-[10px] text-muted-foreground">{o.sub}</span>
+            <span className="text-xs text-muted-foreground">{o.sub}</span>
           </motion.button>
         );
       })}

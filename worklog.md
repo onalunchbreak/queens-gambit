@@ -179,3 +179,19 @@ Work Log:
 
 Stage Summary:
 - Hydration mismatch resolved with a one-line, framework-recommended fix.
+
+---
+Task ID: 9
+Agent: main
+Task: Fix dark-mode captured-piece visibility, enhance Analyse button with LLM suggestions, add Influence tooltip, increase font size.
+
+Work Log:
+- CapturedTray dark-mode fix: each captured piece now sits on a contrasting rounded-full backdrop chip (dark disc for white pieces, light cream disc for black pieces) so both colors are readable in both light and dark mode. VLM-confirmed the captured bishop is visible on its disc in dark mode.
+- Analyse Game button (renamed from "Review Game"): now triggers requestAnalysis() which (a) fetches the review markers if not already loaded, then (b) calls a new /api/analyze endpoint that uses the LLM to generate a personalized coaching analysis with specific move-referenced suggestions (missed wins, better moves, timing). The analysis displays in a "Coach's Analysis" panel with a Brain icon, skeleton loading state, and a Re-run button. Verified: returns move-specific feedback like "after Black's questionable 2...b5, you could have challenged with 2.c4".
+- /api/analyze endpoint: takes sans + annotations + playerName + playerColor + result, builds a compact annotated move list, prompts the LLM as a Beth-Harmon-spirit coach, returns ~220-word flowing analysis covering opening principles, key turning points, what the player could have done better/earlier, and an encouraging closing.
+- Influence tooltip: wrapped the "Influence" label in a shadcn Tooltip (with an Info icon) that explains on hover: "Toggles a colour overlay on every square showing which side controls it... Warm cream tones = White-controlled, deep umber tones = Black-controlled. Use it to spot weak squares, hanging pieces, and who owns the centre at a glance." VLM-confirmed the tooltip renders.
+- Font size increase: bumped the root html font-size from 16px to 17px (mobile) / 17.5px (sm) / 18px (lg+) so all rem-based sizing scales up uniformly. Also bulk-bumped fixed px text classes: text-[10px]/text-[11px] → text-xs, text-[12px] → text-[13px] across all chess components + theme toggle.
+- Lint clean, no console/runtime errors. Cleaned test DB records.
+
+Stage Summary:
+- Dark-mode captured pieces now readable (contrast chips). Analyse Game button delivers LLM-powered personalized coaching suggestions. Influence toggle has a descriptive tooltip. App-wide font size increased for better readability.

@@ -164,7 +164,7 @@ export function ChessBoard({
                 {/* coordinate labels (file on bottom row, rank on left col) */}
                 {r === 7 && (
                   <span
-                    className="absolute bottom-0.5 right-1 text-[9px] sm:text-[10px] font-semibold pointer-events-none"
+                    className="absolute bottom-0.5 right-1 text-[9px] sm:text-xs font-semibold pointer-events-none"
                     style={{
                       color: isLight ? "var(--walnut-deep)" : "var(--maple)",
                       opacity: 0.85,
@@ -175,7 +175,7 @@ export function ChessBoard({
                 )}
                 {c === 0 && (
                   <span
-                    className="absolute top-0.5 left-1 text-[9px] sm:text-[10px] font-semibold pointer-events-none"
+                    className="absolute top-0.5 left-1 text-[9px] sm:text-xs font-semibold pointer-events-none"
                     style={{
                       color: isLight ? "var(--walnut-deep)" : "var(--maple)",
                       opacity: 0.85,

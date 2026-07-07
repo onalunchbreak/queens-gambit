@@ -7,6 +7,13 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { Info } from "lucide-react";
+import {
   RotateCcw,
   Flame,
   LayoutGrid,
@@ -155,7 +162,7 @@ export function GameScreen({ playerName, initialDifficulty, initialColor, onExit
               <h1 className="font-serif text-lg sm:text-xl font-semibold text-foreground truncate">
                 Harmon&apos;s Gambit
               </h1>
-              <p className="text-[11px] sm:text-xs text-muted-foreground truncate">
+              <p className="text-xs sm:text-xs text-muted-foreground truncate">
                 <span className="font-medium text-foreground">{playerName}</span>
                 <span className="mx-1.5 text-primary/70">vs.</span>
                 <span className="font-medium text-foreground">Harmon AI</span>
@@ -257,11 +264,11 @@ export function GameScreen({ playerName, initialDifficulty, initialColor, onExit
               variant="outline"
               size="sm"
               className="h-8"
-              onClick={game.requestReview}
-              disabled={state.isAiThinking || state.reviewLoading || state.history.length === 0}
+              onClick={game.requestAnalysis}
+              disabled={state.isAiThinking || state.reviewLoading || state.analysisLoading || state.history.length === 0}
             >
               <Flame className="h-3.5 w-3.5 mr-1" />
-              {state.reviewLoading ? "Analyzing…" : "Review Game"}
+              {state.analysisLoading ? "Analyzing…" : state.reviewLoading ? "Analyzing…" : "Analyse Game"}
             </Button>
             <Button
               variant="outline"
@@ -289,9 +296,25 @@ export function GameScreen({ playerName, initialDifficulty, initialColor, onExit
               />
               <div className="flex-1">
                 <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                    Influence
-                  </span>
+                  <TooltipProvider delayDuration={150}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button
+                          type="button"
+                          className="flex items-center gap-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors cursor-help"
+                        >
+                          Influence
+                          <Info className="h-3 w-3 text-primary/60" />
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent side="bottom" className="max-w-[240px] text-xs leading-relaxed">
+                        <p className="font-semibold mb-1">Influence Heatmap</p>
+                        <p>Toggles a colour overlay on every square showing which side <em>controls</em> it — based on attacking pieces and their reach.</p>
+                        <p className="mt-1"><span className="text-amber-700 dark:text-amber-300 font-medium">Warm cream tones</span> = White-controlled squares. <span className="text-stone-700 dark:text-stone-300 font-medium">Deep umber tones</span> = Black-controlled squares.</p>
+                        <p className="mt-1 text-muted-foreground">Use it to spot weak squares, hanging pieces, and who owns the centre at a glance.</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                   <div className="flex items-center gap-1.5">
                     <LayoutGrid className="h-3.5 w-3.5 text-primary/70" />
                     <Switch
@@ -301,7 +324,7 @@ export function GameScreen({ playerName, initialDifficulty, initialColor, onExit
                     />
                   </div>
                 </div>
-                <p className="mt-1 text-[11px] leading-snug text-muted-foreground">
+                <p className="mt-1 text-xs leading-snug text-muted-foreground">
                   {state.showHeatmap
                     ? "Warm tones = White control, umber tones = Black control."
                     : "Toggle to see which side controls each square."}
@@ -332,7 +355,7 @@ export function GameScreen({ playerName, initialDifficulty, initialColor, onExit
                 >
                   <div className="flex items-center gap-1.5">
                     <Brain className="h-3.5 w-3.5 text-primary" />
-                    <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                       Harmon&apos;s last move
                     </span>
                   </div>
@@ -350,7 +373,7 @@ export function GameScreen({ playerName, initialDifficulty, initialColor, onExit
                       : state.narration || state.explanation.detail}
                   </p>
                   {state.narration && !state.narrationLoading && (
-                    <p className="flex items-start gap-1 text-[11px] italic text-muted-foreground/70">
+                    <p className="flex items-start gap-1 text-xs italic text-muted-foreground/70">
                       <MessageSquareQuote className="h-3 w-3 mt-0.5 shrink-0" />
                       {state.narration}
                     </p>
@@ -386,11 +409,11 @@ export function GameScreen({ playerName, initialDifficulty, initialColor, onExit
           {/* Difficulty */}
           <div className="rounded-xl border border-border bg-card/80 p-3 shadow-sm">
             <div className="mb-2 flex items-center justify-between">
-              <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+              <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 Opponent level
               </span>
               {state.isAiThinking && (
-                <span className="text-[10px] text-muted-foreground">applies next move</span>
+                <span className="text-xs text-muted-foreground">applies next move</span>
               )}
             </div>
             <DifficultySelector
@@ -399,6 +422,57 @@ export function GameScreen({ playerName, initialDifficulty, initialColor, onExit
               disabled={false}
             />
           </div>
+
+          {/* Coach's analysis panel (LLM-powered textual feedback) */}
+          <AnimatePresence>
+            {(state.analysisLoading || state.analysis) && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 10 }}
+                className="rounded-xl border border-primary/30 bg-gradient-to-br from-card to-muted/50 p-4 shadow-sm"
+              >
+                <div className="mb-2 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Brain className="h-4 w-4 text-primary" />
+                    <span className="text-sm font-semibold text-foreground">Coach&apos;s Analysis</span>
+                  </div>
+                  {state.analysisLoading && (
+                    <span className="text-xs text-muted-foreground italic">Harmon is reviewing your game…</span>
+                  )}
+                </div>
+                {state.analysisLoading ? (
+                  <div className="space-y-2">
+                    {[0, 1, 2, 3].map((i) => (
+                      <div
+                        key={i}
+                        className="h-3 animate-pulse rounded bg-muted"
+                        style={{ width: `${90 - i * 8}%` }}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {state.analysis.split(/\n\n+/).filter(Boolean).map((para, i) => (
+                      <p key={i} className="text-[13px] leading-relaxed text-foreground/85">
+                        {para}
+                      </p>
+                    ))}
+                  </div>
+                )}
+                {!state.analysisLoading && state.analysis && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="mt-3 h-7 px-2 text-xs"
+                    onClick={game.requestAnalysis}
+                  >
+                    Re-run analysis
+                  </Button>
+                )}
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* Review panel */}
           <AnimatePresence>
@@ -461,7 +535,7 @@ export function GameScreen({ playerName, initialDifficulty, initialColor, onExit
 
       {/* Footer */}
       <footer className="mt-auto border-t border-border bg-card/70">
-        <div className="mx-auto w-full max-w-6xl px-4 py-3 text-center text-[11px] text-muted-foreground">
+        <div className="mx-auto w-full max-w-6xl px-4 py-3 text-center text-xs text-muted-foreground">
           Harmon&apos;s Gambit &mdash; a study in calculation. AlphaZero meets the World Chess Championship.
         </div>
       </footer>

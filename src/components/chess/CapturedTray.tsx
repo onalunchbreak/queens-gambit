@@ -51,65 +51,79 @@ export function CapturedTray({ capturedBy, captured, label, align }: CapturedTra
         (align === "right" ? "flex-row-reverse" : "flex-row")
       }
     >
-      <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground whitespace-nowrap">
+      <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground whitespace-nowrap">
         {label}
       </span>
       <div className={"flex flex-wrap items-center gap-0.5 min-h-[20px] " + (align === "right" ? "flex-row-reverse" : "")}>
         <AnimatePresence mode="popLayout">
           {items.length === 0 ? (
-            <span key="empty" className="text-[11px] text-muted-foreground/50 italic">
+            <span key="empty" className="text-xs text-muted-foreground/50 italic">
               —
             </span>
           ) : (
-            items.map((c, idx) => (
-              <motion.span
-                key={c.id}
-                layout
-                initial={{
-                  opacity: 0,
-                  scale: 0.4,
-                  rotateY: -90,
-                  y: capturedBy === "w" ? -16 : 16,
-                  x: align === "right" ? 24 : -24,
-                }}
-                animate={{
-                  opacity: 1,
-                  scale: 1,
-                  rotateY: 0,
-                  y: 0,
-                  x: 0,
-                }}
-                exit={{ opacity: 0, scale: 0.4 }}
-                transition={{
-                  type: "spring",
-                  stiffness: 220,
-                  damping: 18,
-                  delay: 0,
-                }}
-                className="inline-flex"
-                style={{
-                  fontFamily: FONT_STACK,
-                  fontSize: 18,
-                  lineHeight: 1,
-                  color: trayColor === "w" ? "var(--piece-ivory)" : "var(--piece-ebony)",
-                  WebkitTextStroke:
-                    trayColor === "w"
-                      ? "0.8px var(--piece-ivory-stroke)"
-                      : "0.5px var(--piece-ebony-stroke)",
-                  marginLeft: idx > 0 ? -6 : 0,
-                  textShadow: "0 1px 1px rgba(0,0,0,0.2)",
-                  transformStyle: "preserve-3d",
-                }}
-                title={`${trayColor === "w" ? "White" : "Black"} ${c.type}`}
-              >
-                {GLYPH[c.type]}
-              </motion.span>
-            ))
+            items.map((c, idx) => {
+              const isWhitePiece = trayColor === "w";
+              return (
+                <motion.span
+                  key={c.id}
+                  layout
+                  initial={{
+                    opacity: 0,
+                    scale: 0.4,
+                    rotateY: -90,
+                    y: capturedBy === "w" ? -16 : 16,
+                    x: align === "right" ? 24 : -24,
+                  }}
+                  animate={{
+                    opacity: 1,
+                    scale: 1,
+                    rotateY: 0,
+                    y: 0,
+                    x: 0,
+                  }}
+                  exit={{ opacity: 0, scale: 0.4 }}
+                  transition={{
+                    type: "spring",
+                    stiffness: 220,
+                    damping: 18,
+                    delay: 0,
+                  }}
+                  className="inline-flex h-7 w-7 items-center justify-center rounded-full ring-1"
+                  style={{
+                    // Contrasting backdrop chip so BOTH piece colors are readable
+                    // in BOTH light and dark mode.
+                    background: isWhitePiece
+                      ? "linear-gradient(135deg, rgba(43,30,20,0.92), rgba(28,20,12,0.92))" // dark disc for white piece
+                      : "linear-gradient(135deg, rgba(247,239,217,0.96), rgba(230,207,149,0.96))", // light disc for black piece
+                    boxShadow: "0 1px 2px rgba(0,0,0,0.25)",
+                    // ring color adapts: subtle in light, subtle in dark
+                    marginLeft: idx > 0 ? -6 : 0,
+                    transformStyle: "preserve-3d",
+                  }}
+                  title={`${isWhitePiece ? "White" : "Black"} ${c.type}`}
+                >
+                  <span
+                    style={{
+                      fontFamily: FONT_STACK,
+                      fontSize: 18,
+                      lineHeight: 1,
+                      color: isWhitePiece ? "var(--piece-ivory)" : "var(--piece-ebony)",
+                      WebkitTextStroke: isWhitePiece
+                        ? "0.8px var(--piece-ivory-stroke)"
+                        : "0.5px var(--piece-ebony-stroke)",
+                      textShadow: "0 1px 1px rgba(0,0,0,0.2)",
+                    }}
+                  >
+                    {GLYPH[c.type]}
+                  </span>
+                </motion.span>
+              );
+            })
           )}
         </AnimatePresence>
       </div>
       {diff > 0 && (
-        <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 tabular-nums">
+        <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 tabular-nums">
           +{diff}
         </span>
       )}

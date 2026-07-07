@@ -57,7 +57,7 @@ export function DifficultySelector({ value, onChange, disabled }: DifficultySele
             <span className="text-[12.5px] font-semibold leading-tight text-card-foreground">
               {d.label}
             </span>
-            <span className="text-[10px] tabular-nums text-muted-foreground">{d.elo}</span>
+            <span className="text-xs tabular-nums text-muted-foreground">{d.elo}</span>
           </motion.button>
         );
       })}

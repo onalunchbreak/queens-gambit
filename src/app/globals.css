@@ -177,6 +177,17 @@
   * {
     @apply border-border outline-ring/50;
   }
+  html {
+    /* Bump the base font size so all rem-based sizing scales up uniformly.
+       17px on mobile, stepping up on larger screens. */
+    font-size: 17px;
+  }
+  @media (min-width: 640px) {
+    html { font-size: 17.5px; }
+  }
+  @media (min-width: 1024px) {
+    html { font-size: 18px; }
+  }
   body {
     @apply bg-background text-foreground;
   }

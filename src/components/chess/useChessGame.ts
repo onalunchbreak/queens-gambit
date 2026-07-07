@@ -85,6 +85,9 @@ export interface GameState {
   review: ReviewResult | null;
   reviewLoading: boolean;
   reviewIndex: number; // current ply viewed in review (-1 = live)
+  // LLM-powered textual coaching analysis (requested separately from the review markers).
+  analysis: string;
+  analysisLoading: boolean;
   moveCount: number;
   playerColor: PlayColor;
   aiColor: PlayColor;
@@ -136,6 +139,8 @@ export function useChessGame() {
       review: null,
       reviewLoading: false,
       reviewIndex: -1,
+      analysis: "",
+      analysisLoading: false,
       moveCount: 0,
       playerColor: "w",
       aiColor: "b",
@@ -484,6 +489,8 @@ export function useChessGame() {
       review: null,
       reviewLoading: false,
       reviewIndex: -1,
+      analysis: "",
+      analysisLoading: false,
       moveCount: 0,
       playerColor: color,
       aiColor: color === "w" ? "b" : "w",
@@ -635,6 +642,8 @@ export function useChessGame() {
       gameResult: null,
       review: null,
       reviewIndex: -1,
+      analysis: "",
+      analysisLoading: false,
       moveCount: game.history().length,
       winner: null,
       resigned: false,
@@ -649,7 +658,13 @@ export function useChessGame() {
   const requestReview = useCallback(async () => {
     const sans = gameRef.current.history();
     if (sans.length === 0) return;
-    setState((prev) => ({ ...prev, reviewLoading: true, review: null, reviewIndex: sans.length }));
+    setState((prev) => ({
+      ...prev,
+      reviewLoading: true,
+      review: null,
+      reviewIndex: sans.length,
+      analysis: "",
+    }));
     try {
       const res = await fetch("/api/review", {
         method: "POST",
@@ -669,12 +684,69 @@ export function useChessGame() {
     }
   }, []);
 
+  // Request an LLM-powered textual coaching analysis (used by the "Analyse Game"
+  // button). Requires the review annotations to already be loaded so it can
+  // reference specific moves.
+  const requestAnalysis = useCallback(async () => {
+    const sans = gameRef.current.history();
+    if (sans.length === 0) return;
+    // If the review markers haven't been computed yet, fetch them first so the
+    // analysis can reference per-move annotations.
+    let annotations = state.review?.annotations ?? [];
+    if (annotations.length === 0) {
+      setState((prev) => ({ ...prev, reviewLoading: true, reviewIndex: sans.length }));
+      try {
+        const res = await fetch("/api/review", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ fen: START_FEN, sans }),
+        });
+        const data: ReviewResult = await res.json();
+        annotations = data.annotations;
+        setState((prev) => ({
+          ...prev,
+          review: data,
+          reviewLoading: false,
+          reviewIndex: data.annotations.length,
+        }));
+      } catch {
+        setState((prev) => ({ ...prev, reviewLoading: false }));
+      }
+    }
+
+    setState((prev) => ({ ...prev, analysisLoading: true, analysis: "" }));
+    try {
+      const res = await fetch("/api/analyze", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          sans,
+          annotations,
+          playerName: playerNameRef.current || "Player",
+          playerColor: playerColorRef.current,
+          result: gameRef.current.isGameOver()
+            ? (state.gameResult ?? "Game finished")
+            : "Game in progress (partial analysis)",
+        }),
+      });
+      const data = await res.json();
+      setState((prev) => ({
+        ...prev,
+        analysis: (data.analysis as string) || "",
+        analysisLoading: false,
+      }));
+    } catch (err) {
+      console.error("analysis failed", err);
+      setState((prev) => ({ ...prev, analysisLoading: false }));
+    }
+  }, [state.review, state.gameResult]);
+
   const setReviewIndex = useCallback((i: number) => {
     setState((prev) => ({ ...prev, reviewIndex: i }));
   }, []);
 
   const closeReview = useCallback(() => {
-    setState((prev) => ({ ...prev, review: null, reviewIndex: -1 }));
+    setState((prev) => ({ ...prev, review: null, reviewIndex: -1, analysis: "" }));
   }, []);
 
   return {
@@ -690,6 +762,7 @@ export function useChessGame() {
     resign,
     setPlayerName,
     requestReview,
+    requestAnalysis,
     setReviewIndex,
     closeReview,
   };

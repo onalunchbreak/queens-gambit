@@ -116,7 +116,7 @@ export function Leaderboard({ refreshKey }: { refreshKey: number }) {
             </motion.span>
             <span className="text-xs font-semibold text-foreground">Leaderboard</span>
             {totalGames > 0 && (
-              <span className="rounded-full bg-primary px-1.5 py-0.5 text-[10px] font-bold text-primary-foreground">
+              <span className="rounded-full bg-primary px-1.5 py-0.5 text-xs font-bold text-primary-foreground">
                 {totalGames}
               </span>
             )}
@@ -144,7 +144,7 @@ export function Leaderboard({ refreshKey }: { refreshKey: number }) {
               <div className="flex items-center gap-2">
                 <Trophy className="h-4 w-4 text-primary" />
                 <span className="text-sm font-semibold text-foreground">Leaderboard</span>
-                <span className="text-[10px] text-muted-foreground">
+                <span className="text-xs text-muted-foreground">
                   {totalGames} game{totalGames === 1 ? "" : "s"}
                 </span>
               </div>
@@ -152,7 +152,7 @@ export function Leaderboard({ refreshKey }: { refreshKey: number }) {
                 <Button
                   size="sm"
                   variant="ghost"
-                  className="h-7 px-2 text-[11px]"
+                  className="h-7 px-2 text-xs"
                   onClick={() => {
                     setLoading(true);
                     void load();
@@ -180,7 +180,7 @@ export function Leaderboard({ refreshKey }: { refreshKey: number }) {
                   type="button"
                   onClick={() => setTab(t)}
                   className={cn(
-                    "flex-1 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider transition-colors",
+                    "flex-1 px-3 py-1.5 text-xs font-semibold uppercase tracking-wider transition-colors",
                     tab === t
                       ? "border-b-2 border-primary text-foreground"
                       : "text-muted-foreground hover:text-foreground",
@@ -241,17 +241,17 @@ function PlayersList({ data }: { data: LeaderboardData | null }) {
                 : "border-border bg-muted/50",
             )}
           >
-            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary text-[11px] font-bold text-primary-foreground">
+            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
               {medal ?? rank}
             </div>
             <div className="min-w-0 flex-1">
               <div className="flex items-center justify-between gap-2">
                 <span className="truncate text-sm font-semibold text-foreground">{p.playerName}</span>
-                <span className="shrink-0 text-[10px] font-medium text-emerald-700">
+                <span className="shrink-0 text-xs font-medium text-emerald-700">
                   {p.wins}W
                 </span>
               </div>
-              <div className="mt-0.5 flex items-center gap-2 text-[10px] text-muted-foreground">
+              <div className="mt-0.5 flex items-center gap-2 text-xs text-muted-foreground">
                 <span className="inline-flex items-center gap-0.5">
                   <Swords className="h-3 w-3" /> {p.games}
                 </span>
@@ -305,9 +305,9 @@ function RecentList({ data }: { data: LeaderboardData | null }) {
                 <span className="truncate text-xs font-semibold text-foreground">{g.playerName}</span>
                 <span className="text-[9px] text-muted-foreground/60">vs {diff}</span>
               </div>
-              <span className="shrink-0 text-[10px] text-muted-foreground/60">{timeAgo(g.finishedAt)}</span>
+              <span className="shrink-0 text-xs text-muted-foreground/60">{timeAgo(g.finishedAt)}</span>
             </div>
-            <div className="mt-0.5 flex items-center justify-between gap-2 text-[10px] text-muted-foreground">
+            <div className="mt-0.5 flex items-center justify-between gap-2 text-xs text-muted-foreground">
               <span className="truncate">{g.resultLabel}</span>
               <span className="shrink-0 inline-flex items-center gap-1">
                 <Swords className="h-2.5 w-2.5" /> {g.moveCount}

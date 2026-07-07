@@ -55,7 +55,7 @@ export function GameReview({ review, reviewIndex, onChangeIndex, onClose, onRepl
 
       {/* slider */}
       <div className="space-y-1.5">
-        <div className="flex items-center justify-between text-[11px] text-muted-foreground">
+        <div className="flex items-center justify-between text-xs text-muted-foreground">
           <span>Move {idx === 0 ? "—" : `${annotation?.san ?? ""}`}</span>
           <span className="tabular-nums">{idx} / {total}</span>
         </div>
@@ -94,7 +94,7 @@ export function GameReview({ review, reviewIndex, onChangeIndex, onClose, onRepl
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2">
               <span
-                className={cn("rounded-md border px-2 py-0.5 text-[11px] font-bold", KIND_META[annotation.kind].bg)}
+                className={cn("rounded-md border px-2 py-0.5 text-xs font-bold", KIND_META[annotation.kind].bg)}
               >
                 {annotation.kind === "blunder" || annotation.kind === "mistake" ? (
                   <AlertTriangle className="inline h-3 w-3 mr-1 -mt-0.5" />
@@ -103,11 +103,11 @@ export function GameReview({ review, reviewIndex, onChangeIndex, onClose, onRepl
               </span>
               <span className="font-mono font-semibold text-foreground">{annotation.san}</span>
             </div>
-            <span className="text-[11px] text-muted-foreground">
+            <span className="text-xs text-muted-foreground">
               {annotation.byColor === "w" ? "White" : "Black"}
             </span>
           </div>
-          <div className="mt-2 flex items-center gap-3 text-[11px] text-muted-foreground tabular-nums">
+          <div className="mt-2 flex items-center gap-3 text-xs text-muted-foreground tabular-nums">
             <span>Before: {fmtCp(evalBefore)}</span>
             <span>After: {fmtCp(evalAfter)}</span>
             <span className={delta < -50 ? "text-rose-600 font-medium" : delta > 50 ? "text-emerald-600 font-medium" : ""}>
@@ -115,7 +115,7 @@ export function GameReview({ review, reviewIndex, onChangeIndex, onClose, onRepl
             </span>
           </div>
           {annotation.bestMoveSan && annotation.bestMoveSan !== annotation.san && (
-            <p className="mt-1.5 text-[11px] text-muted-foreground">
+            <p className="mt-1.5 text-xs text-muted-foreground">
               Engine suggests <span className="font-mono font-semibold text-foreground">{annotation.bestMoveSan}</span> instead.
             </p>
           )}
@@ -127,7 +127,7 @@ export function GameReview({ review, reviewIndex, onChangeIndex, onClose, onRepl
       )}
 
       {/* legend */}
-      <div className="flex flex-wrap gap-1.5 text-[10px]">
+      <div className="flex flex-wrap gap-1.5 text-xs">
         {(["brilliant", "best", "good", "inaccuracy", "mistake", "blunder"] as AnnotationKind[]).map((k) => (
           <span key={k} className={cn("rounded border px-1.5 py-0.5", KIND_META[k].bg)}>
             {KIND_META[k].label}
