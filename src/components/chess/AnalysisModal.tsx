@@ -94,7 +94,7 @@ export function AnalysisModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[min(97vw,1280px)] max-h-[94vh] gap-0 overflow-hidden p-0 sm:rounded-2xl">
+      <DialogContent className="max-w-[97vw] sm:max-w-[min(97vw,1280px)] max-h-[94vh] gap-0 overflow-hidden p-0 sm:rounded-2xl">
         {/* Header */}
         <DialogHeader className="border-b border-border bg-gradient-to-r from-card to-muted/50 px-4 py-2.5 shrink-0">
           <div className="flex items-center justify-between gap-2 pr-6">
